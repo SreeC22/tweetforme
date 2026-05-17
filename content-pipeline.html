@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fb;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .header-actions { display: flex; gap: 12px; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-secondary:hover { background: #f9fafb; }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+        .btn-ghost {
+            background: transparent;
+            color: #6b7280;
+            padding: 6px 12px;
+        }
+        .btn-ghost:hover { color: #4f46e5; background: #eef2ff; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: white;
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+        .tab.active {
+            background: #4f46e5;
+            color: white;
+        }
+        .tab:hover:not(.active) { color: #1a1a2e; background: #f3f4f6; }
+
+        /* Stats Row */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stat-card .change {
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        /* Table */
+        .table-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .table-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .filter-group { display: flex; gap: 8px; }
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+        }
+        .filter-btn.active {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #4f46e5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        td {
+            padding: 16px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid #f9fafb;
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #fafbfc; }
+
+        /* Content Title */
+        .content-title {
+            font-weight: 500;
+            color: #1a1a2e;
+            margin-bottom: 2px;
+        }
+        .content-platform {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .badge-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .badge-scheduled {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .badge-posted {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .badge-draft {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* Engagement */
+        .engagement {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .engagement span { display: flex; align-items: center; gap: 4px; }
+
+        /* Actions */
+        .actions { display: flex; gap: 6px; }
+
+        /* Upload Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .modal h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .modal p {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .upload-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .upload-zone:hover {
+            border-color: #4f46e5;
+            background: #fafafe;
+        }
+        .upload-zone .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        .upload-zone .label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .upload-zone .hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #4f46e5;
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Content Preview Modal */
+        .preview-modal {
+            max-width: 720px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .preview-content {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #374151;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .preview-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .feedback-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 12px;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .feedback-input:focus { border-color: #4f46e5; }
+        .feedback-input::placeholder { color: #9ca3af; }
+
+        /* Approval Workflow */
+        .review-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .review-status-bar.status-approved { background: #f0fdf4; border-color: #bbf7d0; }
+        .review-status-bar.status-rejected { background: #fef2f2; border-color: #fecaca; }
+        .review-status-bar .status-icon {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .review-status-bar .status-icon.pending { background: #fef3c7; }
+        .review-status-bar .status-icon.approved { background: #d1fae5; }
+        .review-status-bar .status-icon.rejected { background: #fecaca; }
+        .review-status-bar .status-text { flex: 1; color: #374151; }
+        .review-status-bar .status-label { font-weight: 600; }
+
+        /* Version History */
+        .version-history { border-top: 1px solid #f3f4f6; margin-top: 16px; padding-top: 12px; }
+        .version-toggle {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 500; color: #6b7280;
+            cursor: pointer; user-select: none;
+        }
+        .version-toggle:hover { color: #4f46e5; }
+        .version-toggle .chevron { transition: transform 0.2s; }
+        .version-toggle .chevron.open { transform: rotate(90deg); }
+        .version-list { display: none; margin-top: 10px; }
+        .version-list.show { display: block; }
+        .version-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+            font-size: 13px; cursor: pointer; border: 1px solid transparent;
+        }
+        .version-item:hover { background: #f9fafb; }
+        .version-item.active { background: #eef2ff; border-color: #c7d2fe; }
+        .version-item .v-num {
+            width: 22px; height: 22px; border-radius: 6px;
+            background: #f3f4f6; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; font-weight: 600; color: #6b7280;
+            margin-right: 10px;
+        }
+        .version-item.active .v-num { background: #4f46e5; color: white; }
+        .version-item .v-label { color: #374151; font-weight: 500; }
+        .version-item .v-meta { color: #9ca3af; font-size: 11px; }
+        .version-item .v-badge {
+            font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+        }
+        .version-item .v-badge.rejected { background: #fef2f2; color: #dc2626; }
+        .version-item .v-badge.current { background: #dbeafe; color: #2563eb; }
+
+        /* Feedback Chips */
+        .feedback-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .feedback-chip {
+            padding: 5px 12px; border-radius: 16px; font-size: 12px;
+            background: #f3f4f6; color: #374151; cursor: pointer;
+            border: 1px solid transparent; transition: all 0.15s;
+        }
+        .feedback-chip:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+        .feedback-chip.selected { background: #eef2ff; border-color: #4f46e5; color: #4f46e5; }
+
+        /* Action Buttons */
+        .btn-approve { background: #059669; color: white; }
+        .btn-approve:hover { background: #047857; }
+        .btn-reject { background: white; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-reject:hover { background: #fef2f2; }
+        .btn-regen { background: white; color: #4f46e5; border: 1px solid #c7d2fe; }
+        .btn-regen:hover { background: #eef2ff; }
+
+        /* Spinner */
+        .regen-overlay {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.92);
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; border-radius: 10px; gap: 10px;
+        }
+        .spinner {
+            width: 26px; height: 26px; border: 3px solid #e5e7eb;
+            border-top-color: #4f46e5; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .regen-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 20px;
+        }
+        .page-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 13px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+        }
+        .page-btn.active {
+            background: #4f46e5;
+            color: white;
+        }
+        .page-btn:hover:not(.active) { background: #f3f4f6; }
+
+        /* Calendar View */
+        .calendar-grid {
+            display: none;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .calendar-grid.active { display: grid; }
+        .cal-header {
+            background: #f9fafb;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+        .cal-day {
+            background: white;
+            padding: 12px;
+            min-height: 100px;
+            position: relative;
+        }
+        .cal-day .date {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        .cal-event {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .cal-event.twitter { background: #dbeafe; color: #2563eb; }
+        .cal-event.linkedin { background: #d1fae5; color: #059669; }
+        .cal-event.instagram { background: #fce7f3; color: #db2777; }
+
+        /* Step Dots */
+        .step-dot {
+            width: 32px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            transition: all 0.3s;
+        }
+        .step-dot.active {
+            background: #4f46e5;
+            width: 48px;
+        }
+        .step-dot.done {
+            background: #10b981;
+        }
+
+        /* Validation */
+        .required { color: #ef4444; }
+        .field-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+        .field-error {
+            font-size: 12px;
+            color: #ef4444;
+            margin-top: 4px;
+            display: none;
+        }
+        .field-error.show { display: block; }
+        .validation-msg {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #ef4444;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #fef2f2;
+            border-radius: 6px;
+        }
+        .form-group input.invalid,
+        .form-group textarea.invalid {
+            border-color: #ef4444;
+        }
+        .form-group input.valid,
+        .form-group textarea.valid {
+            border-color: #10b981;
+        }
+
+        /* File list */
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .file-item .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-item .file-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: #eef2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4f46e5;
+        }
+        .file-item .file-name { color: #374151; font-weight: 500; }
+        .file-item .file-size { color: #9ca3af; font-size: 12px; }
+        .file-item .remove-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .file-item .remove-btn:hover { color: #ef4444; background: #fef2f2; }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .checkbox-label:has(input:checked) {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #4f46e5;
+        }
+        .checkbox-label input { display: none; }
+
+        /* Tag Input */
+        .tag-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            min-height: 42px;
+            align-items: center;
+            cursor: text;
+        }
+        .tag-input-wrapper:focus-within { border-color: #4f46e5; }
+        .tag-input {
+            border: none !important;
+            outline: none !important;
+            padding: 2px 4px !important;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+        }
+        .topic-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #eef2ff;
+            color: #4f46e5;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .topic-tag .tag-remove {
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 14px;
+        }
+        .topic-tag .tag-remove:hover { opacity: 1; }
+
+        /* Upload zone states */
+        .upload-zone.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        .upload-zone.has-files {
+            border-style: solid;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1a1a2e;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 200;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">Pending Approval</div>
+                <div class="value">4</div>
+                <div class="change">2 new today</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Scheduled</div>
+                <div class="value">12</div>
+                <div class="change">Next: Tomorrow 9am</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Posted This Week</div>
+                <div class="value">8</div>
+                <div class="change">+23% vs last week</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Avg Engagement</div>
+                <div class="value">4.2%</div>
+                <div class="change">+0.8% vs last week</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="table-wrapper" id="tableView">
+            <div class="table-header">
+                <h2>Content Calendar</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterContent('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterContent('pending', this)">Pending</button>
+                    <button class="filter-btn" onclick="filterContent('scheduled', this)">Scheduled</button>
+                    <button class="filter-btn" onclick="filterContent('posted', this)">Posted</button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Content</th>
+                        <th>Status</th>
+                        <th>Scheduled For</th>
+                        <th>Engagement</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contentTable">
+                    <tr data-status="pending">
+                        <td>
+                            <div class="content-title">5 Ways AI is Transforming Product Management</div>
+                            <div class="content-platform">LinkedIn</div>
+                        </td>
+                        <td><span class="badge badge-pending">Pending Approval</span></td>
+                        <td>May 19, 2026 - 9:00 AM</td>
+                        <td><span style="color:#9ca3af">--</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-primary" onclick="openPreview(0)">Review</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="pending">
+                        <td>
+                            <div class="content-title">Behind the Scenes: Our Sprint Planning Process</div>
+                            <div class="content-platform">Twitter / X</div>
+                        </td>
+                        <td><span class="badge badge-pending">Pending Approval</span></td>
+                        <td>May 19, 2026 - 12:00 PM</td>
+                        <td><span style="color:#9ca3af">--</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-primary" onclick="openPreview(1)">Review</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="scheduled">
+                        <td>
+                            <div class="content-title">Customer Spotlight: How Acme Scaled 3x</div>
+                            <div class="content-platform">LinkedIn</div>
+                        </td>
+                        <td><span class="badge badge-scheduled">Scheduled</span></td>
+                        <td>May 20, 2026 - 10:00 AM</td>
+                        <td><span style="color:#9ca3af">--</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-ghost" onclick="openPreview(2)">View</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="scheduled">
+                        <td>
+                            <div class="content-title">The Future of Remote Collaboration [Thread]</div>
+                            <div class="content-platform">Twitter / X</div>
+                        </td>
+                        <td><span class="badge badge-scheduled">Scheduled</span></td>
+                        <td>May 20, 2026 - 2:00 PM</td>
+                        <td><span style="color:#9ca3af">--</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-ghost" onclick="openPreview(3)">View</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="posted">
+                        <td>
+                            <div class="content-title">Why We Bet Big on User Research</div>
+                            <div class="content-platform">LinkedIn</div>
+                        </td>
+                        <td><span class="badge badge-posted">Posted</span></td>
+                        <td>May 16, 2026 - 9:00 AM</td>
+                        <td>
+                            <div class="engagement">
+                                <span>847 views</span>
+                                <span>42 likes</span>
+                                <span>12 comments</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-ghost" onclick="openPreview(4)">View</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="posted">
+                        <td>
+                            <div class="content-title">Hot take: PRDs are dead. Here's what replaced them.</div>
+                            <div class="content-platform">Twitter / X</div>
+                        </td>
+                        <td><span class="badge badge-posted">Posted</span></td>
+                        <td>May 15, 2026 - 11:30 AM</td>
+                        <td>
+                            <div class="engagement">
+                                <span>2.1K views</span>
+                                <span>156 likes</span>
+                                <span>38 replies</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-ghost" onclick="openPreview(5)">View</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="posted">
+                        <td>
+                            <div class="content-title">Product roadmap prioritization framework</div>
+                            <div class="content-platform">Instagram</div>
+                        </td>
+                        <td><span class="badge badge-posted">Posted</span></td>
+                        <td>May 14, 2026 - 8:00 AM</td>
+                        <td>
+                            <div class="engagement">
+                                <span>1.4K views</span>
+                                <span>89 likes</span>
+                                <span>7 saves</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-ghost" onclick="openPreview(6)">View</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-status="pending">
+                        <td>
+                            <div class="content-title">Metrics that matter: Leading vs lagging indicators</div>
+                            <div class="content-platform">LinkedIn</div>
+                        </td>
+                        <td><span class="badge badge-pending">Pending Approval</span></td>
+                        <td>May 21, 2026 - 9:00 AM</td>
+                        <td><span style="color:#9ca3af">--</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm btn-primary" onclick="openPreview(7)">Review</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">></button>
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="calendar-grid" id="calendarView">
+            <div class="cal-header">Mon</div>
+            <div class="cal-header">Tue</div>
+            <div class="cal-header">Wed</div>
+            <div class="cal-header">Thu</div>
+            <div class="cal-header">Fri</div>
+            <div class="cal-header">Sat</div>
+            <div class="cal-header">Sun</div>
+            <div class="cal-day">
+                <div class="date">12</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">13</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">14</div>
+                <div class="cal-event instagram">Roadmap framework</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">15</div>
+                <div class="cal-event twitter">PRDs are dead</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">16</div>
+                <div class="cal-event linkedin">User Research</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">17</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">18</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">19</div>
+                <div class="cal-event linkedin">AI in PM</div>
+                <div class="cal-event twitter">Sprint Planning</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">20</div>
+                <div class="cal-event linkedin">Customer Spotlight</div>
+                <div class="cal-event twitter">Remote Collab</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">21</div>
+                <div class="cal-event linkedin">Metrics</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">22</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">23</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">24</div>
+            </div>
+            <div class="cal-day">
+                <div class="date">25</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal" style="max-width:580px;">
+            <!-- Step Indicator -->
+            <div style="display:flex;gap:8px;margin-bottom:24px;">
+                <div class="step-dot active" id="step1dot"></div>
+                <div class="step-dot" id="step2dot"></div>
+                <div class="step-dot" id="step3dot"></div>
+            </div>
+
+            <!-- Step 1: Brand Upload -->
+            <div id="formStep1">
+                <h2>Upload Brand Materials</h2>
+                <p>We'll analyze your brand voice, tone, and style to generate on-brand content.</p>
+
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="label">Drop files here or click to browse</div>
+                    <div class="hint">PDF, DOCX, PNG, JPG, SVG — Max 25MB per file</div>
+                </div>
+                <input type="file" id="fileInput" hidden multiple accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.svg,.txt">
+
+                <!-- Uploaded Files List -->
+                <div id="fileList" style="margin-bottom:16px;"></div>
+
+                <!-- Validation message -->
+                <div class="validation-msg" id="uploadValidation" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Upload at least one brand file to continue</span>
+                </div>
+
+                <div style="font-size:12px;color:#9ca3af;margin-bottom:20px;">
+                    <strong style="color:#6b7280;">Accepted materials:</strong> Brand guidelines, tone of voice docs, style guides, past social posts, logos, color palettes
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="goToStep(2)" id="step1Next">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Audience & Platforms -->
+            <div id="formStep2" style="display:none;">
+                <h2>Define Your Audience</h2>
+                <p>Tell us who you're creating content for so we can optimize tone and topics.</p>
+
+                <div class="form-group">
+                    <label>Target Audience <span class="required">*</span></label>
+                    <input type="text" id="audienceInput" placeholder="e.g., Product managers at B2B SaaS companies" oninput="validateField(this, 'audience')">
+                    <div class="field-hint">Be specific — industry, role, seniority level</div>
+                    <div class="field-error" id="audienceError">Target audience is required (min 10 characters)</div>
+                </div>
+                <div class="form-group">
+                    <label>Platforms <span class="required">*</span></label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label"><input type="checkbox" value="linkedin" checked onchange="validatePlatforms()"> LinkedIn</label>
+                        <label class="checkbox-label"><input type="checkbox" value="twitter" checked onchange="validatePlatforms()"> Twitter / X</label>
+                        <label class="checkbox-label"><input type="checkbox" value="instagram" onchange="validatePlatforms()"> Instagram</label>
+                        <label class="checkbox-label"><input type="checkbox" value="threads" onchange="validatePlatforms()"> Threads</label>
+                        <label class="checkbox-label"><input type="checkbox" value="tiktok" onchange="validatePlatforms()"> TikTok</label>
+                    </div>
+                    <div class="field-error" id="platformError">Select at least one platform</div>
+                </div>
+                <div class="form-group">
+                    <label>Brand Voice Description <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <textarea id="voiceInput" placeholder="e.g., Professional but approachable, data-driven, occasionally witty. Avoid jargon." style="min-height:70px;"></textarea>
+                    <div class="field-hint">If left blank, we'll infer voice from your uploaded materials</div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Schedule & Topics -->
+            <div id="formStep3" style="display:none;">
+                <h2>Schedule & Topics</h2>
+                <p>Set your posting cadence and preferred content themes.</p>
+
+                <div class="form-group">
+                    <label>Content Frequency <span class="required">*</span></label>
+                    <select id="frequencySelect">
+                        <option value="3">3x per week</option>
+                        <option value="5">5x per week (weekdays)</option>
+                        <option value="7">Daily</option>
+                        <option value="2">2x per week</option>
+                        <option value="1">1x per week</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Posting Times</label>
+                    <div style="display:flex;gap:12px;">
+                        <div style="flex:1;">
+                            <select id="timeSlot1">
+                                <option value="09:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                                <option value="14:00">2:00 PM</option>
+                                <option value="17:00">5:00 PM</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <select id="timezone">
+                                <option>EST</option>
+                                <option>PST</option>
+                                <option>CST</option>
+                                <option>UTC</option>
+                                <option>GMT</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Topics / Themes <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
+                    <div id="topicTags" class="tag-input-wrapper">
+                        <input type="text" id="topicInput" class="tag-input" placeholder="Type a topic and press Enter" onkeydown="handleTopicKey(event)">
+                    </div>
+                    <div class="field-hint">Press Enter to add topics. We'll distribute content across themes evenly.</div>
+                </div>
+                <div class="form-group">
+                    <label>Calendar Duration</label>
+                    <select id="durationSelect">
+                        <option value="2">2 weeks</option>
+                        <option value="4" selected>4 weeks (1 month)</option>
+                        <option value="8">8 weeks (2 months)</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+                    <button class="btn btn-primary" onclick="submitCampaign()" id="submitBtn">Generate Calendar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval & Feedback Modal -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal preview-modal">
+            <!-- Header with version -->
+            <div class="review-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div>
+                    <h2 id="previewTitle" style="margin:0 0 4px 0;font-size:18px;">Content Preview</h2>
+                    <div class="preview-meta" style="margin-bottom:0;">
+                        <span id="previewPlatform">LinkedIn</span>
+                        <span>&middot;</span>
+                        <span id="previewDate">May 19, 2026 - 9:00 AM</span>
+                    </div>
+                </div>
+                <span class="version-badge" id="versionBadge" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;background:#eef2ff;color:#4f46e5;">v1</span>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="review-status-bar" id="reviewStatusBar">
+                <div class="status-icon pending" id="statusIcon">&#9679;</div>
+                <div class="status-text">
+                    <span class="status-label" id="statusLabel">Awaiting your review</span>
+                    <span id="statusDetail"> &mdash; Review the content below and approve, reject, or request changes.</span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="preview-content" id="previewContent" style="position:relative;">
+                Loading...
+            </div>
+
+            <!-- Feedback Section (for pending items) -->
+            <div id="feedbackSection">
+                <div class="feedback-chips" id="feedbackChips">
+                    <span class="feedback-chip" onclick="toggleChip(this)">Make it shorter</span>
+                    <span class="feedback-chip" onclick="toggleChip(this)">More casual tone</span>
+                    <span class="feedback-chip" onclick="toggleChip(this)">Add a statistic</span>
+                    <span class="feedback-chip" onclick="toggleChip(this)">Stronger CTA</span>
+                    <span class="feedback-chip" onclick="toggleChip(this)">More storytelling</span>
+                </div>
+                <textarea class="feedback-input" id="feedbackInput" placeholder="Add specific feedback for regeneration (e.g., 'Reference our Q1 metrics' or 'Match the tone of our last viral post')"></textarea>
+            </div>
+
+            <!-- Version History -->
+            <div class="version-history" id="versionHistory" style="display:none;">
+                <div class="version-toggle" onclick="toggleVersionList()">
+                    <span class="chevron" id="versionChevron">&#9654;</span>
+                    <span>Version History</span>
+                    <span id="versionCount" style="color:#9ca3af;font-size:12px;">(1 version)</span>
+                </div>
+                <div class="version-list" id="versionList"></div>
+            </div>
+
+            <!-- Actions -->
+            <div id="previewActions" style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #f3f4f6;margin-top:16px;">
+                <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
+                <button class="btn btn-reject" id="btnReject" onclick="rejectContent()">Reject</button>
+                <button class="btn btn-regen" id="btnRegen" onclick="regenerateContent()">Regenerate</button>
+                <button class="btn btn-approve" id="btnApprove" onclick="approveContent()">Approve &amp; Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const contentData = [
+            {
+                title: "5 Ways AI is Transforming Product Management",
+                platform: "LinkedIn",
+                date: "May 19, 2026 - 9:00 AM",
+                status: "pending",
+                content: "The AI revolution isn't coming for product managers — it's already here, and the best PMs are leveraging it as a superpower.\n\nHere are 5 ways AI is fundamentally changing how we build products:\n\n1. User research at scale — AI can analyze thousands of support tickets and interviews in minutes, surfacing patterns humans would miss.\n\n2. Prioritization backed by data — No more gut feelings. AI models can predict feature impact based on historical usage patterns.\n\n3. Spec writing on autopilot — First drafts of PRDs, user stories, and acceptance criteria generated in seconds.\n\n4. Real-time competitive intelligence — Automated monitoring of competitor launches, pricing changes, and market shifts.\n\n5. Personalized roadmap communication — Tailor roadmap updates to each stakeholder's interests automatically.\n\nThe PMs who thrive in 2026 won't be replaced by AI — they'll be the ones who learned to wield it first.\n\nWhat's your experience? Which of these has had the biggest impact on your workflow?"
+            },
+            {
+                title: "Behind the Scenes: Our Sprint Planning Process",
+                platform: "Twitter / X",
+                date: "May 19, 2026 - 12:00 PM",
+                status: "pending",
+                content: "People ask how our team ships so fast. Here's the secret: our sprint planning takes 30 min, not 3 hours.\n\nThe framework:\n\n1/ Pre-work > meetings. Every ticket has context BEFORE planning starts. No explaining in real-time.\n\n2/ Capacity is sacred. We plan to 70% capacity. The other 30% handles the inevitable surprises.\n\n3/ One metric per sprint. Not five goals. ONE north star the whole team rallies around.\n\n4/ Demo > status update. We show working software, not slide decks.\n\nResult: 94% sprint completion rate, team morale through the roof.\n\nSteal this. Your team will thank you."
+            },
+            {
+                title: "Customer Spotlight: How Acme Scaled 3x",
+                platform: "LinkedIn",
+                date: "May 20, 2026 - 10:00 AM",
+                status: "scheduled",
+                content: "When Acme Corp came to us, they were processing 10K orders/day. Twelve months later? 30K+ — with the same team size.\n\nHere's what we learned building alongside them:\n\nThe bottleneck wasn't technology. It was process. Their team was spending 60% of time on manual workflows that should have been automated on day one.\n\nWe focused on three high-leverage automations:\n- Order routing logic (saved 4hrs/day)\n- Customer communication sequences (saved 6hrs/day)\n- Reporting and reconciliation (saved 3hrs/day)\n\n13 hours freed up daily. That's not efficiency — that's a transformation.\n\nThe lesson for PMs: Before building new features, audit where your users spend time on repetitive tasks. The biggest wins are often the least glamorous."
+            },
+            {
+                title: "The Future of Remote Collaboration [Thread]",
+                platform: "Twitter / X",
+                date: "May 20, 2026 - 2:00 PM",
+                status: "scheduled",
+                content: "Hot take: Most 'collaboration tools' are actually 'notification tools' in disguise.\n\nHere's what actually works for remote teams in 2026:\n\n1/ Async-first, sync-when-needed. Default to written communication. Meet only when alignment requires real-time dialogue.\n\n2/ Context over access. Giving everyone access to everything creates noise. Curate context for each role.\n\n3/ Outcomes > hours. Track what shipped, not who was online at 9am.\n\nThe best remote teams I've seen don't need more tools. They need fewer tools, used with more discipline."
+            },
+            {
+                title: "Why We Bet Big on User Research",
+                platform: "LinkedIn",
+                date: "May 16, 2026 - 9:00 AM",
+                status: "posted",
+                content: "Last quarter we paused feature development for 2 weeks to do pure user research.\n\nOur board thought we were crazy. Our team was skeptical.\n\nThe result? We killed 3 features on our roadmap that users didn't actually want, and discovered 2 massive pain points we'd completely missed.\n\nROI of that 2-week pause: ~$400K in saved development costs + a 34% increase in user satisfaction scores the following quarter.\n\nUser research isn't a 'nice to have.' It's the highest-leverage activity in product development.\n\nIf you're building without talking to users weekly, you're guessing. And guessing is expensive."
+            },
+            {
+                title: "Hot take: PRDs are dead. Here's what replaced them.",
+                platform: "Twitter / X",
+                date: "May 15, 2026 - 11:30 AM",
+                status: "posted",
+                content: "PRDs are dead.\n\nNot because documentation is bad — because 20-page docs that nobody reads are bad.\n\nWhat replaced them at top teams:\n\n1/ One-pagers with clear problem statements\n2/ Figma prototypes that SHOW instead of tell\n3/ Recorded Loom walkthroughs for context\n4/ Living tickets that evolve with the build\n\nThe goal was never 'write a PRD.' It was 'align the team.' Use whatever format actually achieves that.\n\n(Yes, I'm a PM saying this. No, I don't miss writing 20-page specs.)"
+            },
+            {
+                title: "Product roadmap prioritization framework",
+                platform: "Instagram",
+                date: "May 14, 2026 - 8:00 AM",
+                status: "posted",
+                content: "[Carousel Post]\n\nSlide 1: The RICE framework is broken. Here's what we use instead.\n\nSlide 2: Problem with RICE — Confidence scores are subjective, Effort estimates are always wrong, It ignores strategic alignment.\n\nSlide 3: Our framework: Impact x Urgency x Alignment / Complexity\n\nSlide 4: Impact = How many users benefit? How much does it move our north star metric?\n\nSlide 5: Urgency = Is there a deadline? Will waiting make it harder?\n\nSlide 6: Alignment = Does it serve our current OKRs? Does it strengthen our moat?\n\nSlide 7: Complexity ≠ Effort. It's about unknowns, dependencies, and risk.\n\nSlide 8: Save this for your next prioritization session. DM me for the Notion template."
+            },
+            {
+                title: "Metrics that matter: Leading vs lagging indicators",
+                platform: "LinkedIn",
+                date: "May 21, 2026 - 9:00 AM",
+                status: "pending",
+                content: "Every PM tracks revenue. Smart PMs track what PREDICTS revenue.\n\nThe difference between leading and lagging indicators is the difference between driving with a windshield vs a rearview mirror.\n\nLagging (what happened): Revenue, churn rate, NPS score\nLeading (what's about to happen): Feature activation rate, time-to-value, support ticket volume\n\nExample: If your activation rate drops 10% this week, you KNOW churn will spike in 30 days. That's a 30-day head start on fixing it.\n\nMy rule: For every lagging metric on your dashboard, identify 2-3 leading indicators that predict it. Then watch those daily.\n\nWhat leading indicators does your team track?"
+            }
+        ];
+
+        let currentPreviewIndex = 0;
+        let uploadedFiles = [];
+        let currentStep = 1;
+        let topics = [];
+
+        // Version history per content item
+        const versionHistory = {};
+        contentData.forEach((item, i) => {
+            versionHistory[i] = [{
+                version: 1,
+                content: item.content,
+                status: item.status === 'pending' ? 'current' : 'approved',
+                feedback: null,
+                timestamp: 'Generated May 17, 2026'
+            }];
+        });
+
+        // Upload Modal
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+            resetForm();
+        }
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+        function resetForm() {
+            currentStep = 1;
+            uploadedFiles = [];
+            topics = [];
+            updateStepDisplay();
+            renderFileList();
+            document.getElementById('uploadValidation').style.display = 'none';
+        }
+
+        // Step Navigation
+        function goToStep(step) {
+            if (step === 2 && !validateStep1()) return;
+            if (step === 3 && !validateStep2()) return;
+            currentStep = step;
+            updateStepDisplay();
+        }
+        function updateStepDisplay() {
+            document.getElementById('formStep1').style.display = currentStep === 1 ? 'block' : 'none';
+            document.getElementById('formStep2').style.display = currentStep === 2 ? 'block' : 'none';
+            document.getElementById('formStep3').style.display = currentStep === 3 ? 'block' : 'none';
+            ['step1dot','step2dot','step3dot'].forEach((id, i) => {
+                const dot = document.getElementById(id);
+                dot.className = 'step-dot';
+                if (i + 1 === currentStep) dot.classList.add('active');
+                else if (i + 1 < currentStep) dot.classList.add('done');
+            });
+        }
+
+        // Validation
+        function validateStep1() {
+            if (uploadedFiles.length === 0) {
+                document.getElementById('uploadValidation').style.display = 'flex';
+                return false;
+            }
+            document.getElementById('uploadValidation').style.display = 'none';
+            return true;
+        }
+        function validateStep2() {
+            let valid = true;
+            const audience = document.getElementById('audienceInput');
+            if (!audience.value || audience.value.length < 10) {
+                audience.classList.add('invalid');
+                audience.classList.remove('valid');
+                document.getElementById('audienceError').classList.add('show');
+                valid = false;
+            }
+            if (!validatePlatforms()) valid = false;
+            return valid;
+        }
+        function validateField(input, field) {
+            const errorEl = document.getElementById(field + 'Error');
+            if (field === 'audience') {
+                if (input.value.length >= 10) {
+                    input.classList.remove('invalid');
+                    input.classList.add('valid');
+                    errorEl.classList.remove('show');
+                } else {
+                    input.classList.add('invalid');
+                    input.classList.remove('valid');
+                }
+            }
+        }
+        function validatePlatforms() {
+            const checked = document.querySelectorAll('.checkbox-group input:checked');
+            const errorEl = document.getElementById('platformError');
+            if (checked.length === 0) {
+                errorEl.classList.add('show');
+                return false;
+            }
+            errorEl.classList.remove('show');
+            return true;
+        }
+
+        // File Upload
+        const ALLOWED_TYPES = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/png','image/jpeg','image/svg+xml','text/plain'];
+        const MAX_FILE_SIZE = 25 * 1024 * 1024;
+        const MAX_FILES = 10;
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        // Drag and drop
+        const uploadZone = document.getElementById('uploadZone');
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(Array.from(e.dataTransfer.files));
+        });
+
+        function handleFiles(files) {
+            files.forEach(file => {
+                if (uploadedFiles.length >= MAX_FILES) {
+                    showToast('Maximum 10 files allowed');
+                    return;
+                }
+                if (file.size > MAX_FILE_SIZE) {
+                    showToast(`${file.name} exceeds 25MB limit`);
+                    return;
+                }
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                const validExts = ['.pdf','.doc','.docx','.png','.jpg','.jpeg','.svg','.txt'];
+                if (!validExts.includes(ext)) {
+                    showToast(`${file.name}: unsupported file type`);
+                    return;
+                }
+                uploadedFiles.push({ name: file.name, size: file.size, type: ext });
+            });
+            renderFileList();
+            document.getElementById('uploadValidation').style.display = 'none';
+            if (uploadedFiles.length > 0) uploadZone.classList.add('has-files');
+        }
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            renderFileList();
+            if (uploadedFiles.length === 0) uploadZone.classList.remove('has-files');
+        }
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
+            list.innerHTML = uploadedFiles.map((f, i) => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-icon">${f.type.replace('.','').toUpperCase()}</div>
+                        <div>
+                            <div class="file-name">${f.name}</div>
+                            <div class="file-size">${(f.size / 1024).toFixed(0)} KB</div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile(${i})">x</button>
+                </div>
+            `).join('');
+        }
+
+        // Topics
+        function handleTopicKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = e.target.value.trim();
+                if (val && topics.length < 8) {
+                    topics.push(val);
+                    e.target.value = '';
+                    renderTopics();
+                } else if (topics.length >= 8) {
+                    showToast('Maximum 8 topics');
+                }
+            }
+        }
+        function removeTopic(i) {
+            topics.splice(i, 1);
+            renderTopics();
+        }
+        function renderTopics() {
+            const wrapper = document.getElementById('topicTags');
+            const input = document.getElementById('topicInput');
+            wrapper.innerHTML = topics.map((t, i) => `
+                <span class="topic-tag">${t} <span class="tag-remove" onclick="removeTopic(${i})">x</span></span>
+            `).join('');
+            wrapper.appendChild(input);
+        }
+
+        // Submit
+        function submitCampaign() {
+            closeUploadModal();
+            showToast('Analyzing brand materials...');
+            setTimeout(() => showToast('Generating content calendar...'), 1500);
+            setTimeout(() => showToast('Done! 12 posts ready for review.'), 4000);
+        }
+        function openPreview(index) {
+            currentPreviewIndex = index;
+            const item = contentData[index];
+            const versions = versionHistory[index];
+            const currentVersion = versions[versions.length - 1];
+
+            document.getElementById('previewTitle').textContent = item.title;
+            document.getElementById('previewPlatform').textContent = item.platform;
+            document.getElementById('previewDate').textContent = item.date;
+            document.getElementById('previewContent').innerHTML = currentVersion.content.replace(/\n/g, '<br>');
+            document.getElementById('versionBadge').textContent = 'v' + currentVersion.version;
+
+            const feedbackSection = document.getElementById('feedbackSection');
+            const btnReject = document.getElementById('btnReject');
+            const btnRegen = document.getElementById('btnRegen');
+            const btnApprove = document.getElementById('btnApprove');
+            const statusBar = document.getElementById('reviewStatusBar');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusLabel = document.getElementById('statusLabel');
+            const statusDetail = document.getElementById('statusDetail');
+            const historySection = document.getElementById('versionHistory');
+
+            // Reset chips
+            document.querySelectorAll('.feedback-chip').forEach(c => c.classList.remove('selected'));
+            document.getElementById('feedbackInput').value = '';
+
+            if (item.status === 'pending') {
+                feedbackSection.style.display = 'block';
+                btnReject.style.display = '';
+                btnRegen.style.display = '';
+                btnApprove.style.display = '';
+                statusBar.className = 'review-status-bar';
+                statusIcon.className = 'status-icon pending';
+                statusIcon.innerHTML = '&#9679;';
+                statusLabel.textContent = 'Awaiting your review';
+                statusDetail.innerHTML = ' &mdash; Review the content below and approve, reject, or request changes.';
+            } else if (item.status === 'scheduled') {
+                feedbackSection.style.display = 'none';
+                btnReject.style.display = 'none';
+                btnRegen.style.display = 'none';
+                btnApprove.style.display = 'none';
+                statusBar.className = 'review-status-bar status-approved';
+                statusIcon.className = 'status-icon approved';
+                statusIcon.innerHTML = '&#10003;';
+                statusLabel.textContent = 'Approved & scheduled';
+                statusDetail.innerHTML = ' &mdash; This content will be posted on ' + item.date + '.';
+            } else if (item.status === 'posted') {
+                feedbackSection.style.display = 'none';
+                btnReject.style.display = 'none';
+                btnRegen.style.display = 'none';
+                btnApprove.style.display = 'none';
+                statusBar.className = 'review-status-bar status-approved';
+                statusIcon.className = 'status-icon approved';
+                statusIcon.innerHTML = '&#10003;';
+                statusLabel.textContent = 'Published';
+                statusDetail.innerHTML = ' &mdash; Posted on ' + item.date + '.';
+            }
+
+            // Version history
+            if (versions.length > 1) {
+                historySection.style.display = 'block';
+                document.getElementById('versionCount').textContent = '(' + versions.length + ' versions)';
+                renderVersionList(index);
+            } else {
+                historySection.style.display = versions.length > 0 ? 'block' : 'none';
+                document.getElementById('versionCount').textContent = '(' + versions.length + ' version)';
+                renderVersionList(index);
+            }
+
+            document.getElementById('previewModal').classList.add('active');
+        }
+
+        function renderVersionList(index) {
+            const versions = versionHistory[index];
+            const list = document.getElementById('versionList');
+            list.innerHTML = versions.map((v, i) => `
+                <div class="version-item ${i === versions.length - 1 ? 'active' : ''}" onclick="viewVersion(${index}, ${i})">
+                    <div style="display:flex;align-items:center;">
+                        <div class="v-num">${v.version}</div>
+                        <div>
+                            <div class="v-label">${v.feedback ? 'Regenerated' : 'Original'}</div>
+                            <div class="v-meta">${v.timestamp}${v.feedback ? ' &middot; "' + v.feedback.substring(0, 30) + (v.feedback.length > 30 ? '...' : '') + '"' : ''}</div>
+                        </div>
+                    </div>
+                    <span class="v-badge ${v.status}">${v.status === 'current' ? 'Current' : v.status === 'rejected' ? 'Rejected' : v.status === 'approved' ? 'Approved' : ''}</span>
+                </div>
+            `).join('');
+        }
+
+        function viewVersion(contentIndex, versionIndex) {
+            const version = versionHistory[contentIndex][versionIndex];
+            document.getElementById('previewContent').innerHTML = version.content.replace(/\n/g, '<br>');
+            document.getElementById('versionBadge').textContent = 'v' + version.version;
+            // Update active state
+            document.querySelectorAll('.version-item').forEach((el, i) => {
+                el.classList.toggle('active', i === versionIndex);
+            });
+        }
+
+        function toggleVersionList() {
+            const list = document.getElementById('versionList');
+            const chevron = document.getElementById('versionChevron');
+            list.classList.toggle('show');
+            chevron.classList.toggle('open');
+        }
+
+        function toggleChip(el) {
+            el.classList.toggle('selected');
+            // Build feedback from selected chips
+            const selected = document.querySelectorAll('.feedback-chip.selected');
+            if (selected.length > 0 && !document.getElementById('feedbackInput').value) {
+                const hints = Array.from(selected).map(c => c.textContent);
+                document.getElementById('feedbackInput').placeholder = 'Selected: ' + hints.join(', ') + ' — add more detail...';
+            } else {
+                document.getElementById('feedbackInput').placeholder = "Add specific feedback for regeneration (e.g., 'Reference our Q1 metrics')";
+            }
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.remove('active');
+            document.getElementById('feedbackInput').value = '';
+            document.getElementById('versionList').classList.remove('show');
+            document.getElementById('versionChevron').classList.remove('open');
+        }
+
+        function approveContent() {
+            const index = currentPreviewIndex;
+            contentData[index].status = 'scheduled';
+            const versions = versionHistory[index];
+            versions[versions.length - 1].status = 'approved';
+            closePreviewModal();
+            showToast('Content approved and scheduled for ' + contentData[index].date);
+            renderTable();
+            updateStats();
+        }
+
+        function rejectContent() {
+            const index = currentPreviewIndex;
+            const feedback = document.getElementById('feedbackInput').value;
+            const chips = Array.from(document.querySelectorAll('.feedback-chip.selected')).map(c => c.textContent);
+            const fullFeedback = [...chips, feedback].filter(Boolean).join('; ');
+
+            if (!fullFeedback) {
+                document.getElementById('feedbackInput').style.borderColor = '#ef4444';
+                document.getElementById('feedbackInput').placeholder = 'Please provide feedback explaining why this was rejected...';
+                return;
+            }
+
+            const versions = versionHistory[index];
+            versions[versions.length - 1].status = 'rejected';
+            closePreviewModal();
+            showToast('Content rejected. Feedback saved for regeneration.');
+        }
+
+        function regenerateContent() {
+            const index = currentPreviewIndex;
+            const feedback = document.getElementById('feedbackInput').value;
+            const chips = Array.from(document.querySelectorAll('.feedback-chip.selected')).map(c => c.textContent);
+            const fullFeedback = [...chips, feedback].filter(Boolean).join('; ');
+
+            // Mark current version as rejected
+            const versions = versionHistory[index];
+            versions[versions.length - 1].status = 'rejected';
+
+            // Show regenerating state
+            const contentEl = document.getElementById('previewContent');
+            contentEl.innerHTML = '<div class="regen-overlay"><div class="spinner"></div><span class="regen-label">Regenerating with your feedback...</span></div>' + contentEl.innerHTML;
+
+            // Disable buttons during regeneration
+            document.getElementById('btnApprove').disabled = true;
+            document.getElementById('btnRegen').disabled = true;
+            document.getElementById('btnReject').disabled = true;
+
+            // Simulate regeneration
+            setTimeout(() => {
+                const newVersion = {
+                    version: versions.length + 1,
+                    content: generateNewVersion(index, fullFeedback),
+                    status: 'current',
+                    feedback: fullFeedback || 'Regenerated',
+                    timestamp: 'Regenerated just now'
+                };
+                versions.push(newVersion);
+
+                // Update the display
+                contentEl.innerHTML = newVersion.content.replace(/\n/g, '<br>');
+                document.getElementById('versionBadge').textContent = 'v' + newVersion.version;
+                document.getElementById('versionCount').textContent = '(' + versions.length + ' versions)';
+                document.getElementById('versionHistory').style.display = 'block';
+                renderVersionList(index);
+
+                // Re-enable buttons
+                document.getElementById('btnApprove').disabled = false;
+                document.getElementById('btnRegen').disabled = false;
+                document.getElementById('btnReject').disabled = false;
+
+                // Reset feedback
+                document.getElementById('feedbackInput').value = '';
+                document.querySelectorAll('.feedback-chip').forEach(c => c.classList.remove('selected'));
+
+                showToast('New version generated — review and approve when ready');
+            }, 2500);
+        }
+
+        function generateNewVersion(index, feedback) {
+            // Simulated regeneration with slight modifications
+            const original = contentData[index].content;
+            const modifications = {
+                0: "AI isn't replacing product managers — it's making the great ones unstoppable.\n\nAfter 6 months of integrating AI into our PM workflow, here's what actually moved the needle:\n\n1. Research synthesis — We went from 2 weeks of interview analysis to 2 hours. AI surfaces patterns across 500+ user conversations instantly.\n\n2. Data-backed prioritization — Our RICE scores now incorporate predictive models trained on 3 years of feature performance data. Gut feeling? Gone.\n\n3. First-draft automation — PRDs, user stories, release notes — AI handles the blank page problem so PMs can focus on strategy.\n\n4. Competitive radar — Real-time alerts when competitors ship, change pricing, or update positioning. No more quarterly research sprints.\n\n5. Stakeholder communication — Personalized roadmap updates generated for each audience (exec team gets metrics, eng gets specs, sales gets timelines).\n\nThe ROI: Our team shipped 40% more features this quarter with the same headcount.\n\nWhat AI tools are in your PM stack? Drop them below — building a community resource list.",
+                1: "Our sprint planning is 30 min. Completion rate: 94%.\n\nHere's the exact playbook:\n\n1/ Async pre-work is mandatory. Every ticket has a 3-line brief BEFORE planning. No cold reads.\n\n2/ We capacity-plan to 70%. Not 100%. Not 80%. Seventy. The buffer isn't waste — it's what keeps us from death-marching.\n\n3/ One sprint = one metric. We pick the ONE number that matters this cycle. Everything else is supporting cast.\n\n4/ Demos over updates. Every Friday we show working software. No slides. No \"it's almost done.\"\n\nResult: Team morale is high, stakeholders trust our estimates, and we haven't missed a sprint in 4 months.\n\nBookmark this. Try it next Monday. Report back.",
+                7: "Stop watching your revenue dashboard. Start watching what PREDICTS it.\n\nHere's the mental model that changed how I run product:\n\nLagging indicators tell you what already happened:\n→ Revenue, churn, NPS\n\nLeading indicators tell you what's ABOUT to happen:\n→ Activation rate, time-to-value, support volume, feature adoption velocity\n\nReal example from last quarter:\nOur activation rate dropped 12% over 2 weeks. We caught it immediately. Root cause: onboarding flow broke after a deploy. Fixed in 48 hours.\n\nIf we'd waited for the churn metric to spike? That's a 30-day lag. Hundreds of lost users.\n\nMy framework:\n• For every KPI on your exec dashboard, identify 2-3 upstream signals\n• Set alerts on the leading indicators, not the lagging ones\n• Review weekly — are the leading indicators still predictive?\n\nThe PMs who see problems coming are the ones whose dashboards look forward, not backward.\n\nWhat leading indicators does your team track? Genuinely curious."
+            };
+            return modifications[index] || original + "\n\n[Updated based on feedback: " + feedback + "]";
+        }
+
+        function updateStats() {
+            const pending = contentData.filter(c => c.status === 'pending').length;
+            const scheduled = contentData.filter(c => c.status === 'scheduled').length;
+            const posted = contentData.filter(c => c.status === 'posted').length;
+            const statCards = document.querySelectorAll('.stat-card .value');
+            statCards[0].textContent = pending;
+            statCards[1].textContent = scheduled;
+            statCards[2].textContent = posted;
+        }
+        
+        function filterContent(status, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const rows = document.querySelectorAll('#contentTable tr');
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        function toggleView() {
+            const table = document.getElementById('tableView');
+            const calendar = document.getElementById('calendarView');
+            const toggle = document.getElementById('viewToggleText');
+            if (table.style.display === 'none') {
+                table.style.display = '';
+                calendar.classList.remove('active');
+                toggle.textContent = 'Calendar View';
+            } else {
+                table.style.display = 'none';
+                calendar.classList.add('active');
+                toggle.textContent = 'List View';
+            }
+        }
+        function renderTable() {
+            const rows = document.querySelectorAll('#contentTable tr');
+            rows.forEach((row, i) => {
+                const item = contentData[i];
+                const statusBadge = row.querySelector('.badge');
+                const statusMap = {
+                    'pending': ['badge-pending', 'Pending Approval'],
+                    'scheduled': ['badge-scheduled', 'Scheduled'],
+                    'posted': ['badge-posted', 'Posted']
+                };
+                statusBadge.className = 'badge ' + statusMap[item.status][0];
+                statusBadge.textContent = statusMap[item.status][1];
+                row.dataset.status = item.status;
+
+                const actionCell = row.querySelector('.actions');
+                if (item.status === 'pending') {
+                    actionCell.innerHTML = `<button class="btn btn-sm btn-primary" onclick="openPreview(${i})">Review</button>`;
+                } else {
+                    actionCell.innerHTML = `<button class="btn btn-sm btn-ghost" onclick="openPreview(${i})">View</button>`;
+                }
+            });
+        }
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
