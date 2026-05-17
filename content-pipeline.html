@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Pipeline</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #e7e9ea;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 0; border-left: 1px solid #2f3336; border-right: 1px solid #2f3336; min-height: 100vh; }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2f3336;
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e7e9ea;
+        }
+        .header-actions { display: flex; gap: 12px; }
+        .btn {
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1d9bf0;
+            color: white;
+        }
+        .btn-primary:hover { background: #1a8cd8; }
+        .btn-secondary {
+            background: transparent;
+            color: #e7e9ea;
+            border: 1px solid #536471;
+        }
+        .btn-secondary:hover { background: #181919; }
+        .btn-sm { padding: 6px 16px; font-size: 13px; }
+        .btn-ghost {
+            background: transparent;
+            color: #71767b;
+            padding: 6px 12px;
+            border-radius: 9999px;
+        }
+        .btn-ghost:hover { color: #1d9bf0; background: rgba(29,155,240,0.1); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #2f3336;
+        }
+        .tab {
+            flex: 1;
+            padding: 16px 0;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #71767b;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            position: relative;
+        }
+        .tab.active {
+            color: #e7e9ea;
+            font-weight: 700;
+        }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 56px;
+            height: 4px;
+            background: #1d9bf0;
+            border-radius: 2px;
+        }
+        .tab:hover { background: rgba(231,233,234,0.03); }
+
+        /* Stats Row */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-bottom: 1px solid #2f3336;
+        }
+        .stat-card {
+            padding: 16px 20px;
+            border-right: 1px solid #2f3336;
+        }
+        .stat-card:last-child { border-right: none; }
+        .stat-card .label {
+            font-size: 13px;
+            color: #71767b;
+            margin-bottom: 4px;
+        }
+        .stat-card .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e7e9ea;
+        }
+        .stat-card .change {
+            font-size: 13px;
+            color: #00ba7c;
+            margin-top: 2px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            gap: 8px;
+            border-bottom: 1px solid #2f3336;
+        }
+        .filter-btn {
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #536471;
+            background: transparent;
+            color: #e7e9ea;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: #e7e9ea;
+            color: #0f1419;
+            border-color: #e7e9ea;
+        }
+        .filter-btn:hover:not(.active) { background: rgba(239,243,244,0.1); }
+
+        /* Loading State */
+        .loading-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 40px;
+            text-align: center;
+        }
+        .loading-state.active { display: flex; }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #2f3336;
+            border-top-color: #1d9bf0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 28px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-bottom: 8px;
+        }
+        .loading-state p {
+            font-size: 15px;
+            color: #71767b;
+            max-width: 320px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 300px;
+            width: 100%;
+        }
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #71767b;
+            transition: all 0.3s;
+        }
+        .loading-step.active {
+            color: #e7e9ea;
+        }
+        .loading-step.done {
+            color: #00ba7c;
+        }
+        .loading-step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #2f3336;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        .loading-step.active .loading-step-icon {
+            border-color: #1d9bf0;
+            background: rgba(29,155,240,0.1);
+        }
+        .loading-step.done .loading-step-icon {
+            border-color: #00ba7c;
+            background: rgba(0,186,124,0.1);
+        }
+        .loading-step-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+        .loading-progress {
+            width: 100%;
+            max-width: 300px;
+            height: 4px;
+            background: #2f3336;
+            border-radius: 2px;
+            margin-top: 24px;
+            overflow: hidden;
+        }
+        .loading-progress-bar {
+            height: 100%;
+            background: #1d9bf0;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 40px;
+            text-align: center;
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #1d2124;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .empty-state-icon svg {
+            width: 36px;
+            height: 36px;
+            color: #536471;
+        }
+        .empty-state h2 {
+            font-size: 30px;
+            font-weight: 800;
+            color: #e7e9ea;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 15px;
+            color: #71767b;
+            max-width: 340px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        /* Tweet-style Content Cards */
+        .tweet-feed { }
+        .tweet-card {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2f3336;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tweet-card:hover { background: rgba(231,233,234,0.03); }
+        .tweet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2f3336;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #e7e9ea;
+            overflow: hidden;
+        }
+        .tweet-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .tweet-body { flex: 1; min-width: 0; }
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .tweet-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e7e9ea;
+        }
+        .tweet-verified {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tweet-verified svg { width: 18px; height: 18px; }
+        .tweet-handle {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .tweet-time {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .tweet-dot {
+            color: #71767b;
+            font-size: 15px;
+            padding: 0 4px;
+        }
+        .tweet-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #e7e9ea;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .tweet-content .hashtag { color: #1d9bf0; }
+        .tweet-content .mention { color: #1d9bf0; }
+
+        /* Tweet Engagement Row */
+        .tweet-actions {
+            display: flex;
+            justify-content: space-between;
+            max-width: 425px;
+            margin-top: 4px;
+        }
+        .tweet-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #71767b;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+        .tweet-action:hover { color: #1d9bf0; }
+        .tweet-action.reply:hover { color: #1d9bf0; }
+        .tweet-action.repost:hover { color: #00ba7c; }
+        .tweet-action.like:hover { color: #f91880; }
+        .tweet-action.views:hover { color: #1d9bf0; }
+        .tweet-action svg { width: 18px; height: 18px; }
+
+        /* Status & Meta on tweet cards */
+        .tweet-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge-pending {
+            background: rgba(255,212,0,0.1);
+            color: #ffd400;
+        }
+        .badge-scheduled {
+            background: rgba(29,155,240,0.1);
+            color: #1d9bf0;
+        }
+        .badge-posted {
+            background: rgba(0,186,124,0.1);
+            color: #00ba7c;
+        }
+        .badge-draft {
+            background: rgba(113,118,123,0.1);
+            color: #71767b;
+        }
+        .tweet-schedule {
+            font-size: 13px;
+            color: #71767b;
+        }
+        .tweet-platform {
+            font-size: 13px;
+            color: #71767b;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tweet-platform .platform-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Three-dot menu */
+        .tweet-more {
+            margin-left: auto;
+            padding: 4px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #71767b;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+        }
+        .tweet-more:hover { color: #1d9bf0; background: rgba(29,155,240,0.1); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(91,112,131,0.4);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #000;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #2f3336;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #2f3336;
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+        }
+        .modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #e7e9ea;
+            font-size: 18px;
+        }
+        .modal-close:hover { background: rgba(239,243,244,0.1); }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-left: 24px;
+        }
+
+        /* Full Tweet in Modal */
+        .full-tweet {
+            padding: 16px 20px;
+        }
+        .full-tweet .tweet-avatar {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+        .full-tweet-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .full-tweet-names {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-tweet-names .tweet-name {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .full-tweet-names .tweet-handle {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .full-tweet-content {
+            font-size: 17px;
+            line-height: 1.5;
+            color: #e7e9ea;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .full-tweet-content .hashtag { color: #1d9bf0; }
+        .full-tweet-content .mention { color: #1d9bf0; }
+        .full-tweet-timestamp {
+            font-size: 15px;
+            color: #71767b;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2f3336;
+        }
+        .full-tweet-stats {
+            display: flex;
+            gap: 20px;
+            padding: 16px 0;
+            border-bottom: 1px solid #2f3336;
+            font-size: 14px;
+        }
+        .full-tweet-stats span {
+            color: #71767b;
+        }
+        .full-tweet-stats strong {
+            color: #e7e9ea;
+            font-weight: 700;
+        }
+        .full-tweet-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-bottom: 1px solid #2f3336;
+        }
+        .full-tweet-actions .tweet-action {
+            padding: 8px 12px;
+        }
+        .full-tweet-actions .tweet-action svg { width: 22px; height: 22px; }
+
+        /* Review Section in Modal */
+        .review-section {
+            padding: 16px 20px;
+            border-top: 1px solid #2f3336;
+        }
+        .review-section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-bottom: 12px;
+        }
+        .review-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn-approve {
+            background: #00ba7c;
+            color: white;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-approve:hover { background: #00a06a; }
+        .btn-reject {
+            background: transparent;
+            color: #f4212e;
+            border: 1px solid #67070f;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-reject:hover { background: rgba(244,33,46,0.1); }
+        .btn-regen {
+            background: transparent;
+            color: #1d9bf0;
+            border: 1px solid #1d4e7e;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-regen:hover { background: rgba(29,155,240,0.1); }
+
+        .feedback-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #2f3336;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            background: #000;
+            color: #e7e9ea;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .feedback-input:focus { border-color: #1d9bf0; }
+        .feedback-input::placeholder { color: #71767b; }
+
+        /* Feedback Chips */
+        .feedback-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .feedback-chip {
+            padding: 6px 14px; border-radius: 9999px; font-size: 13px;
+            background: transparent; color: #e7e9ea; cursor: pointer;
+            border: 1px solid #536471; transition: all 0.15s; font-weight: 500;
+        }
+        .feedback-chip:hover { background: rgba(29,155,240,0.1); border-color: #1d9bf0; color: #1d9bf0; }
+        .feedback-chip.selected { background: rgba(29,155,240,0.1); border-color: #1d9bf0; color: #1d9bf0; }
+
+        /* Status Bar */
+        .review-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,212,0,0.05);
+            border: 1px solid rgba(255,212,0,0.2);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .review-status-bar.status-approved { background: rgba(0,186,124,0.05); border-color: rgba(0,186,124,0.2); }
+        .review-status-bar.status-rejected { background: rgba(244,33,46,0.05); border-color: rgba(244,33,46,0.2); }
+        .review-status-bar .status-text { flex: 1; color: #e7e9ea; }
+        .review-status-bar .status-label { font-weight: 700; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #1d9bf0;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 200;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Thread connector */
+        .thread-line {
+            width: 2px;
+            background: #2f3336;
+            margin: 0 auto;
+            height: 100%;
+            position: absolute;
+            left: 19px;
+            top: 56px;
+            bottom: 0;
+        }
+        .tweet-card { position: relative; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2f3336; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Content Pipeline</h1>
+            <div class="header-actions" id="headerActions" style="display:none;">
+                <button class="btn btn-primary" onclick="openUpload()">Add Brand Materials</button>
+            </div>
+        </div>
+
+
+        <!-- Stats -->
+        <div class="stats" style="display:none;">
+            <div class="stat-card">
+                <div class="label">Pending Review</div>
+                <div class="value" id="statPending">0</div>
+                <div class="change" id="statPendingChange"></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Scheduled</div>
+                <div class="value" id="statScheduled">0</div>
+                <div class="change" id="statScheduledChange"></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Posted</div>
+                <div class="value" id="statPosted">0</div>
+                <div class="change" id="statPostedChange"></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Avg Engagement</div>
+                <div class="value" id="statEngagement">0%</div>
+                <div class="change" id="statEngagementChange"></div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar" style="display:none;">
+            <button class="filter-btn active" onclick="filterContent('all', this)">All</button>
+            <button class="filter-btn" onclick="filterContent('pending', this)">Pending</button>
+            <button class="filter-btn" onclick="filterContent('scheduled', this)">Scheduled</button>
+            <button class="filter-btn" onclick="filterContent('posted', this)">Posted</button>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.75 2H4.25C3.01 2 2 3.01 2 4.25v15.5C2 20.99 3.01 22 4.25 22h15.5c1.24 0 2.25-1.01 2.25-2.25V4.25C22 3.01 20.99 2 19.75 2zM4.25 3.5h15.5c.413 0 .75.337.75.75v9.676l-3.858-3.858a.75.75 0 00-1.06 0l-4.574 4.574-2.108-2.108a.75.75 0 00-1.06 0L4.5 15.882V4.25c0-.413.337-.75.75-.75zm15.5 17h-15.5a.75.75 0 01-.75-.75v-2.311l3.97-3.97 2.108 2.108a.75.75 0 001.06 0l4.574-4.574L20 14.738v5.012a.75.75 0 01-.75.75z"></path></svg>
+            </div>
+            <h2>No brand materials yet</h2>
+            <p>Add your brand voice, style guides, and reference content to start generating posts that sound like you.</p>
+            <button class="btn btn-primary" onclick="openUpload()" style="padding: 12px 24px; font-size: 15px;">Add Brand Materials</button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <h2>Generating your content</h2>
+            <p>Analyzing your brand materials and crafting posts in your voice...</p>
+            <div class="loading-steps">
+                <div class="loading-step active" id="step1">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Analyzing brand materials</span>
+                </div>
+                <div class="loading-step" id="step2">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Learning your voice & tone</span>
+                </div>
+                <div class="loading-step" id="step3">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Crafting posts for your schedule</span>
+                </div>
+                <div class="loading-step" id="step4">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Finalizing content queue</span>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Tweet Feed -->
+        <div class="tweet-feed" id="tweetFeed" style="display:none;"></div>
+    </div>
+
+    <!-- Tweet Detail Modal -->
+    <div class="modal-overlay" id="tweetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <span class="modal-title">Post</span>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeUpload()">&times;</button>
+                <span class="modal-title">Add Brand Materials</span>
+            </div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Content</label>
+                    <textarea class="feedback-input" placeholder="What's happening?" style="min-height:120px;"></textarea>
+                    <div style="font-size:12px; color:#71767b; text-align:right; margin-top:4px;">0 / 280</div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Platform</label>
+                    <div style="display:flex; gap:8px;">
+                        <button class="filter-btn active">X / Twitter</button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Posting Frequency</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="">Times</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select>
+                        <span style="color:#71767b; font-size:14px;">times per</span>
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">X API Token</label>
+                    <div style="position:relative;">
+                        <input type="password" id="xTokenInput" placeholder="Enter your X API Bearer Token" style="width:100%; padding:10px 40px 10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none;">
+                        <button onclick="toggleTokenVisibility()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#71767b; cursor:pointer; font-size:16px;" id="tokenToggle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div style="font-size:12px; color:#71767b; margin-top:6px;">Required to post on your behalf. Your token is stored locally.</div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitBrandMaterials()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Supabase Client
+        const SUPABASE_URL = 'https://qiojxbwdzqktlpgilrbg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpb2p4YndkenFrdGxwZ2lscmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjczNDgsImV4cCI6MjA5NDYwMzM0OH0.3axCm5uxWYp0a8T0iyLw0Z-n-rzhubuqPe7BXM2dD7s';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let contentData = [];
+
+        // Fetch posts from Supabase
+        async function fetchPosts() {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .order('scheduled_for', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching posts:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // Transform Supabase rows to frontend format
+        function transformPosts(posts) {
+            return posts.map((post, idx) => ({
+                id: idx,
+                dbId: post.id,
+                title: post.title,
+                handle: '@tweetforme',
+                name: 'TweetForMe',
+                platform: post.platform || 'Twitter / X',
+                status: post.status,
+                scheduledFor: post.scheduled_for ? new Date(post.scheduled_for).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + new Date(post.scheduled_for).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Not scheduled',
+                content: post.content,
+                engagement: post.status === 'posted' ? {
+                    views: post.engagement_views || '0',
+                    likes: post.engagement_likes || '0',
+                    comments: post.engagement_comments || '0'
+                } : null,
+                avatar: 'TF'
+            }));
+        }
+
+        // Update stats from data
+        function updateStats(posts) {
+            const pending = posts.filter(p => p.status === 'pending').length;
+            const scheduled = posts.filter(p => p.status === 'scheduled').length;
+            const posted = posts.filter(p => p.status === 'posted').length;
+
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statScheduled').textContent = scheduled;
+            document.getElementById('statPosted').textContent = posted;
+            document.getElementById('statEngagement').textContent = posts.length > 0 ? calculateAvgEngagement(posts) : '0%';
+        }
+
+        function calculateAvgEngagement(posts) {
+            const postedPosts = posts.filter(p => p.status === 'posted' && p.engagement_likes);
+            if (postedPosts.length === 0) return '0%';
+            const totalLikes = postedPosts.reduce((sum, p) => sum + parseInt(p.engagement_likes || '0'), 0);
+            const totalViews = postedPosts.reduce((sum, p) => sum + parseInt(String(p.engagement_views || '0').replace(/[^0-9]/g, '')), 0);
+            if (totalViews === 0) return '0%';
+            return (totalLikes / totalViews * 100).toFixed(1) + '%';
+        }
+
+        // Initialize app - check Supabase for existing posts
+        async function initApp() {
+            const posts = await fetchPosts();
+            if (posts.length > 0) {
+                contentData = transformPosts(posts);
+                updateStats(posts);
+                renderFeed();
+            } else {
+                renderFeed(); // Shows empty state
+            }
+        }
+
+        const sampleData = [
+            {
+                id: 0,
+                title: "5 Ways AI is Transforming Product Management",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "pending",
+                scheduledFor: "May 19, 2026 · 9:00 AM",
+                content: "5 Ways AI is Transforming Product Management\n\nProduct management is evolving faster than ever. Here's how AI is reshaping our craft:\n\n1. Automated user research synthesis — no more spending days reading through interview transcripts\n\n2. Predictive prioritization — data-driven stack ranking that actually works\n\n3. Smart PRD generation — first drafts in seconds, not hours\n\n4. Real-time sentiment analysis — know how users feel before they churn\n\n5. Intelligent roadmap suggestions — based on market signals and user behavior\n\nThe PMs who embrace these tools will ship 10x faster.\n\nWhich one excites you most? Drop a comment below.",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 1,
+                title: "Behind the Scenes: Our Sprint Planning Process",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "pending",
+                scheduledFor: "May 19, 2026 · 12:00 PM",
+                content: "Behind the scenes: our sprint planning process\n\nWe ditched story points. Here's what we do instead:\n\n→ Focus on outcomes, not output\n→ 1-day tasks max (if it's bigger, break it down)\n→ Every ticket has a \"definition of done\" AND a \"definition of impact\"\n→ PMs attend standup Mon & Thu only\n\nResult? 40% faster cycle time. Engineers happier. PMs less burnt out.\n\nThe old way was killing us. This saved our team. #ProductManagement #Agile",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 2,
+                title: "Metrics that matter: Leading vs lagging indicators",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "pending",
+                scheduledFor: "May 21, 2026 · 9:00 AM",
+                content: "Metrics that matter: Leading vs lagging indicators\n\nMost PMs track the wrong metrics. They obsess over revenue (lagging) while ignoring activation rate (leading).\n\nLeading indicators predict the future:\n• Feature adoption rate\n• Time to first value\n• NPS trend direction\n• Weekly active usage\n\nLagging indicators confirm the past:\n• Revenue\n• Churn rate\n• Customer lifetime value\n• Market share\n\nYou need both — but if you're only tracking lagging indicators, you're driving by looking in the rearview mirror.\n\nStart with ONE leading metric this sprint. Which will you pick?",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 3,
+                title: "Customer Spotlight: How Acme Scaled 3x",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "scheduled",
+                scheduledFor: "May 20, 2026 · 10:00 AM",
+                content: "Customer Spotlight: How Acme Corp scaled 3x in 6 months\n\nWhen Acme came to us, they were drowning in manual processes. Their PM team was spending 60% of their time on status updates.\n\nWe helped them:\n✅ Automate sprint reporting\n✅ Set up real-time dashboards\n✅ Implement async decision-making\n✅ Cut meeting time by 50%\n\n6 months later: 3x revenue, same team size.\n\nThe bottleneck was never talent. It was tooling.\n\nFull case study in the comments. 👇",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 4,
+                title: "The Future of Remote Collaboration [Thread]",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "scheduled",
+                scheduledFor: "May 20, 2026 · 2:00 PM",
+                content: "The future of remote collaboration — a thread 🧵\n\nAfter 3 years fully remote, here are the non-obvious lessons we learned about making distributed teams work:\n\n1/ Async by default, sync by exception.\n\nEvery meeting should have a \"could this be a doc?\" check. 80% of the time, the answer is yes.\n\n2/ Documentation is your product.\n\nIf it's not written down, it doesn't exist. We treat our internal docs with the same rigor as our product.\n\n3/ Time zones are a feature, not a bug.\n\nOur SF team hands off to London who hands off to Singapore. The product literally gets built 24/7.\n\n4/ Over-communicate context, not status.\n\nNobody needs another \"just checking in\" message. Share the WHY behind decisions.\n\n5/ Build in-person time strategically.\n\nWe do quarterly offsites focused on relationship building. Zero laptops allowed.\n\nRemote isn't harder — it's different. Optimize for it.",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 5,
+                title: "Why We Bet Big on User Research",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "posted",
+                scheduledFor: "May 16, 2026 · 9:00 AM",
+                content: "Why we bet big on user research (and it 10x'd our conversion)\n\nLast quarter, we paused feature development for 2 weeks. The entire product team did nothing but talk to users.\n\nEngineering leadership was nervous. Sales was frustrated. But we learned:\n\n• Users didn't want more features — they wanted fewer, better ones\n• Our onboarding was losing 40% of users at step 3\n• The #1 requested feature was something we'd already built (but buried in settings)\n\nWe shipped 3 changes in the next sprint. Conversion jumped 10x.\n\nThe lesson: talking to users isn't a nice-to-have. It's the highest-ROI activity a PM can do.\n\nWhen's the last time you watched a user try your product?",
+                engagement: { views: "847", likes: "42", comments: "12" },
+                avatar: "TF"
+            },
+            {
+                id: 6,
+                title: "Hot take: PRDs are dead. Here's what replaced them.",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "posted",
+                scheduledFor: "May 15, 2026 · 11:30 AM",
+                content: "Hot take: PRDs are dead.\n\nHere's what replaced them at the best product teams:\n\n→ 1-pagers with clear problem statements\n→ Figma prototypes that tell the story\n→ 5-min Loom walkthroughs\n→ Living docs that evolve with the product\n\nThe 30-page PRD that nobody reads? That's organizational theater.\n\nShip the context, not the document. #ProductManagement",
+                engagement: { views: "2.1K", likes: "156", replies: "38" },
+                avatar: "TF"
+            },
+            {
+                id: 7,
+                title: "Product roadmap prioritization framework",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "posted",
+                scheduledFor: "May 14, 2026 · 8:00 AM",
+                content: "The prioritization framework we use for our roadmap:\n\nFor each feature, score 1-5 on:\n• User pain (how much does this hurt?)\n• Business impact (does it move a metric?)\n• Confidence (do we have evidence?)\n• Effort (can we ship in 1 sprint?)\n\nMultiply pain × impact × confidence, divide by effort.\n\nStack rank. Ship top 3. Ignore everything else until next cycle.\n\nSimple > sophisticated. Every time. #ProductManagement #Roadmap",
+                engagement: { views: "1.4K", likes: "89", comments: "7" },
+                avatar: "TF"
+            }
+        ];
+
+        function renderFeed(filter = 'all') {
+            const feed = document.getElementById('tweetFeed');
+            const emptyState = document.getElementById('emptyState');
+            const filtered = filter === 'all' ? contentData : contentData.filter(c => c.status === filter);
+
+            if (contentData.length === 0) {
+                emptyState.style.display = 'flex';
+                feed.style.display = 'none';
+                document.querySelector('.stats').style.display = 'none';
+                document.querySelector('.filter-bar').style.display = 'none';
+                document.getElementById('headerActions').style.display = 'none';
+                return;
+            } else {
+                emptyState.style.display = 'none';
+                feed.style.display = 'block';
+                document.querySelector('.stats').style.display = 'grid';
+                document.querySelector('.filter-bar').style.display = 'flex';
+                document.getElementById('headerActions').style.display = 'flex';
+            }
+
+            feed.innerHTML = filtered.map((item, idx) => {
+                const statusBadge = `<span class="badge badge-${item.status}">${item.status === 'pending' ? 'Pending Review' : item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span>`;
+
+                // Truncate content for feed view
+                const truncated = item.content.length > 180 ? item.content.substring(0, 180) + '...' : item.content;
+                const formattedContent = formatTweetText(truncated);
+
+                const engagementHtml = item.engagement ? `
+                    <div class="tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                            <span>${item.engagement.comments || item.engagement.replies || '0'}</span>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                            <span>0</span>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                            <span>${item.engagement.likes}</span>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                            <span>${item.engagement.views}</span>
+                        </button>
+                    </div>
+                ` : `
+                    <div class="tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                        </button>
+                    </div>
+                `;
+
+                return `
+                    <div class="tweet-card" data-status="${item.status}" onclick="openPreview(${item.id})">
+                        <div class="tweet-avatar">${item.avatar}</div>
+                        <div class="tweet-body">
+                            <div class="tweet-header">
+                                <span class="tweet-name">${item.name}</span>
+                                <span class="tweet-verified"><svg viewBox="0 0 22 22" fill="#1d9bf0"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.855-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.69-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.636.433 1.221.878 1.69.47.446 1.055.752 1.69.883.635.13 1.294.083 1.902-.143.271.586.702 1.084 1.24 1.438.538.354 1.167.551 1.813.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path></svg></span>
+                                <span class="tweet-handle">${item.handle}</span>
+                                <span class="tweet-dot">·</span>
+                                <span class="tweet-time">${item.scheduledFor.split('·')[0].trim().replace(', 2026', '')}</span>
+                                <button class="tweet-more" onclick="event.stopPropagation()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path></svg>
+                                </button>
+                            </div>
+                            <div class="tweet-meta">
+                                ${statusBadge}
+                                <span class="tweet-platform">${item.platform}</span>
+                                <span class="tweet-schedule">${item.scheduledFor}</span>
+                            </div>
+                            <div class="tweet-content">${formattedContent}</div>
+                            ${engagementHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTweetText(text) {
+            return text
+                .replace(/(#\w+)/g, '<span class="hashtag">$1</span>')
+                .replace(/(@\w+)/g, '<span class="mention">$1</span>');
+        }
+
+        function parseScheduleDate(dateStr) {
+            // Parse "May 19, 2026 · 9:00 AM" format
+            try {
+                const cleaned = dateStr.replace('·', '').replace(/\s+/g, ' ').trim();
+                return new Date(cleaned).toISOString();
+            } catch (e) {
+                return new Date().toISOString();
+            }
+        }
+
+        function openPreview(id) {
+            const item = contentData[id];
+            const modal = document.getElementById('tweetModal');
+            const content = document.getElementById('modalContent');
+
+            const formattedContent = formatTweetText(item.content);
+
+            const engagementStats = item.engagement ? `
+                <div class="full-tweet-stats">
+                    ${item.engagement.views ? `<span><strong>${item.engagement.views}</strong> Views</span>` : ''}
+                    ${item.engagement.likes ? `<span><strong>${item.engagement.likes}</strong> Likes</span>` : ''}
+                    ${item.engagement.comments ? `<span><strong>${item.engagement.comments}</strong> Comments</span>` : ''}
+                    ${item.engagement.replies ? `<span><strong>${item.engagement.replies}</strong> Replies</span>` : ''}
+                </div>
+            ` : '';
+
+            const reviewSection = item.status === 'pending' ? `
+                <div class="review-section">
+                    <div class="review-status-bar">
+                        <span class="status-text"><span class="status-label">Pending Review</span> — Awaiting your approval before scheduling</span>
+                    </div>
+                    <h3>Quick Feedback</h3>
+                    <div class="feedback-chips">
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Too long</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Wrong tone</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Needs data</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Off brand</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Great as-is</span>
+                    </div>
+                    <textarea class="feedback-input" placeholder="Add notes for revision..."></textarea>
+                    <div class="review-actions">
+                        <button class="btn btn-approve" onclick="approvePost(${id})">Approve</button>
+                        <button class="btn btn-reject" onclick="rejectPost(${id})">Reject</button>
+                        <button class="btn btn-regen" onclick="regeneratePost(${id})">Regenerate</button>
+                    </div>
+                </div>
+            ` : '';
+
+            content.innerHTML = `
+                <div class="full-tweet">
+                    <div class="full-tweet-header">
+                        <div class="tweet-avatar">${item.avatar}</div>
+                        <div class="full-tweet-names">
+                            <span class="tweet-name" style="display:flex;align-items:center;gap:4px;">${item.name} <svg width="18" height="18" viewBox="0 0 22 22" fill="#1d9bf0"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.855-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.69-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.636.433 1.221.878 1.69.47.446 1.055.752 1.69.883.635.13 1.294.083 1.902-.143.271.586.702 1.084 1.24 1.438.538.354 1.167.551 1.813.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path></svg></span>
+                            <span class="tweet-handle">${item.handle}</span>
+                        </div>
+                    </div>
+                    <div class="full-tweet-content">${formattedContent}</div>
+                    <div class="full-tweet-timestamp">${item.scheduledFor} · ${item.platform}</div>
+                    ${engagementStats}
+                    <div class="full-tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                ${reviewSection}
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tweetModal').classList.remove('active');
+        }
+
+        function openUpload() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUpload() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function toggleTokenVisibility() {
+            const input = document.getElementById('xTokenInput');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        // Reset token input border on typing
+        document.addEventListener('DOMContentLoaded', () => {
+            const tokenInput = document.getElementById('xTokenInput');
+            tokenInput.addEventListener('input', () => {
+                tokenInput.style.borderColor = '#2f3336';
+            });
+        });
+
+        function submitBrandMaterials() {
+            const token = document.getElementById('xTokenInput').value.trim();
+            if (!token) {
+                document.getElementById('xTokenInput').style.borderColor = '#f4212e';
+                document.getElementById('xTokenInput').setAttribute('placeholder', 'Token is required');
+                document.getElementById('xTokenInput').focus();
+                return;
+            }
+            // Store token locally
+            localStorage.setItem('x_api_token', token);
+            closeUpload();
+            // Hide empty state, show loading
+            document.getElementById('emptyState').style.display = 'none';
+            document.querySelector('.stats').style.display = 'none';
+            document.querySelector('.filter-bar').style.display = 'none';
+            document.getElementById('tweetFeed').style.display = 'none';
+
+            const loadingState = document.getElementById('loadingState');
+            loadingState.classList.add('active');
+
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            const progressBar = document.getElementById('progressBar');
+            let currentStep = 0;
+
+            // Animate progress bar
+            progressBar.style.width = '10%';
+
+            function advanceStep() {
+                if (currentStep > 0) {
+                    document.getElementById(steps[currentStep - 1]).classList.remove('active');
+                    document.getElementById(steps[currentStep - 1]).classList.add('done');
+                }
+                if (currentStep < steps.length) {
+                    document.getElementById(steps[currentStep]).classList.add('active');
+                    progressBar.style.width = ((currentStep + 1) / steps.length * 100) + '%';
+                    currentStep++;
+                    setTimeout(advanceStep, 1800);
+                } else {
+                    // Done - insert posts into Supabase then show feed
+                    setTimeout(async () => {
+                        loadingState.classList.remove('active');
+                        steps.forEach(s => {
+                            document.getElementById(s).classList.remove('active', 'done');
+                        });
+                        document.getElementById(steps[0]).classList.add('active');
+                        progressBar.style.width = '0%';
+
+                        // Insert sample posts into Supabase
+                        const postsToInsert = sampleData.map(item => ({
+                            title: item.title,
+                            content: item.content,
+                            platform: item.platform,
+                            status: item.status || 'pending',
+                            scheduled_for: item.scheduledFor ? parseScheduleDate(item.scheduledFor) : null,
+                            engagement_views: item.engagement ? item.engagement.views : null,
+                            engagement_likes: item.engagement ? item.engagement.likes : null,
+                            engagement_comments: item.engagement ? (item.engagement.comments || item.engagement.replies) : null
+                        }));
+
+                        const { data, error } = await supabase.from('posts').insert(postsToInsert).select();
+
+                        if (error) {
+                            console.error('Supabase insert error:', error);
+                            // Fallback to local sample data
+                            contentData = sampleData;
+                        } else {
+                            contentData = transformPosts(data);
+                            updateStats(data);
+                        }
+
+                        renderFeed();
+                        showToast('Content generated successfully!');
+                    }, 800);
+                }
+            }
+
+            setTimeout(advanceStep, 600);
+        }
+
+        function filterContent(filter, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderFeed(filter);
+        }
+
+        function switchView(view, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        async function approvePost(id) {
+            const post = contentData[id];
+            if (post.dbId) {
+                await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.dbId);
+            }
+            contentData[id].status = 'scheduled';
+            closeModal();
+            renderFeed();
+            showToast('Post approved and scheduled');
+        }
+
+        async function rejectPost(id) {
+            const post = contentData[id];
+            if (post.dbId) {
+                await supabase.from('posts').update({ status: 'rejected' }).eq('id', post.dbId);
+            }
+            contentData[id].status = 'draft';
+            closeModal();
+            renderFeed();
+            showToast('Post rejected — sent back for revision');
+        }
+
+        function regeneratePost(id) {
+            showToast('Regenerating content...');
+            setTimeout(() => {
+                closeModal();
+                showToast('New version generated');
+            }, 2000);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modals on overlay click
+        document.getElementById('tweetModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUpload();
+        });
+
+        // Init - try Supabase first, fallback to empty state
+        initApp();
+    </script>
+</body>
+</html>
