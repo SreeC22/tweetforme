@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import WaitlistForm from "@/components/WaitlistForm";
+import WaitlistForm from "@/components/waitlist/WaitlistForm";
 import LiveCount from "@/components/LiveCount";
 
 /* =========================================================================
