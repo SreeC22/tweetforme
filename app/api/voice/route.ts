@@ -15,22 +15,20 @@ phrases, sentence shapes, opinions, mannerisms. If the writer uses lowercase, sa
 
 Return ONLY a JSON object matching this TypeScript type, with no prose:
 {
-  "summary": string,             // 2-3 sentence portrait of the voice
-  "tone": string[],              // 4-6 short descriptors, e.g. "dry", "earnest", "punchy"
-  "vocabulary": string[],        // recurring words/phrases the author actually uses
-  "structures": string[],        // sentence/post shapes, e.g. "opens with a single-line hook"
-  "dos": string[],               // explicit rules to follow when writing as them
-  "donts": string[],             // anti-patterns to avoid
-  "signature_moves": string[],   // tricks that make a post unmistakably theirs
-  "example_openings": string[]   // 4-6 plausible opening lines in their voice
+  "summary": string,
+  "tone": string[],
+  "vocabulary": string[],
+  "structures": string[],
+  "dos": string[],
+  "donts": string[],
+  "signature_moves": string[],
+  "example_openings": string[]
 }`;
 
 export async function POST(req: NextRequest) {
   try {
     const { samples } = (await req.json()) as { samples: string[] };
-    const cleaned = (samples || [])
-      .map((s) => (s || "").trim())
-      .filter(Boolean);
+    const cleaned = (samples || []).map((s) => (s || "").trim()).filter(Boolean);
 
     if (cleaned.length < 3) {
       return NextResponse.json(
@@ -40,24 +38,18 @@ export async function POST(req: NextRequest) {
     }
 
     const client = getAnthropic();
-    const formatted = cleaned
-      .map((s, i) => `--- Post ${i + 1} ---\n${s}`)
-      .join("\n\n");
+    const formatted = cleaned.map((s, i) => `--- Post ${i + 1} ---\n${s}`).join("\n\n");
 
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: 2000,
       system: SYS,
       messages: [
-        {
-          role: "user",
-          content: `Here are my past posts. Build my voice profile.\n\n${formatted}`,
-        },
+        { role: "user", content: `Here are my past posts. Build my voice profile.\n\n${formatted}` },
       ],
     });
 
     const parsed = extractJson<Omit<VoiceProfile, "samples" | "createdAt">>(asText(res));
-
     const profile: VoiceProfile = {
       ...parsed,
       samples: cleaned,

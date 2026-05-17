@@ -5,7 +5,6 @@ export const maxDuration = 30;
 
 /**
  * Auto-post to Meta Threads via the Threads Graph API.
- * Requires THREADS_USER_ID + THREADS_ACCESS_TOKEN (long-lived user token).
  * Two-step flow: create a media container, then publish it.
  */
 export async function POST(req: NextRequest) {
@@ -28,7 +27,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nothing to post." }, { status: 400 });
     }
 
-    // 1) Create container
     const createUrl = new URL(`https://graph.threads.net/v1.0/${userId}/threads`);
     createUrl.searchParams.set("media_type", "TEXT");
     createUrl.searchParams.set("text", text);
@@ -43,7 +41,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2) Publish container
     const pubUrl = new URL(`https://graph.threads.net/v1.0/${userId}/threads_publish`);
     pubUrl.searchParams.set("creation_id", cj.id);
     pubUrl.searchParams.set("access_token", token);
@@ -57,7 +54,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Optional: fetch permalink
     let url: string | undefined;
     try {
       const meta = await fetch(
@@ -66,7 +62,7 @@ export async function POST(req: NextRequest) {
       const mj = await meta.json();
       url = mj?.permalink;
     } catch {
-      // permalink is best-effort
+      /* permalink is best-effort */
     }
 
     return NextResponse.json({ ok: true, id: pj.id, url });

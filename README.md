@@ -3,12 +3,18 @@
 > _Your voice. On autopilot._
 > Paste 10 of your past posts. We learn your voice. Then we draft and publish to **X** and **Threads** — without the AI smell.
 
-This repo contains:
+## What's live right now
 
-- 🌐 A **waitlist landing page** at `/` — ship this first to start collecting signups.
-- 🧬 A **voice-training** flow at `/train` — paste past posts → get a Voice Profile.
-- ✍️ A **generator** at `/generate` — drop an idea → 3 X drafts + 2 Threads drafts in your voice.
-- 🚀 **One-tap publishing** to X and Threads via their official APIs (token-gated).
+**Waitlist** at `/` — email capture, share-on-X / share-on-Threads buttons, optional webhook ping on every signup. Ship this first to start collecting demand.
+
+## What's built but dormant
+
+The full product code lives in the repo and will work the moment you set `ANTHROPIC_API_KEY` and link to the routes:
+
+- `/train` — paste past posts, Claude extracts a Voice Profile, stored in browser `localStorage`.
+- `/generate` — drop in an idea, get 3 X drafts (one as a thread) + 2 Threads drafts in your voice. Edit, copy, or one-tap publish.
+- `/api/voice`, `/api/generate` — Claude-backed.
+- `/api/post-x`, `/api/post-threads` — official X API v2 and Meta Threads Graph publishing.
 
 See [`PRD.md`](./PRD.md) for the full product vision and roadmap.
 
@@ -18,78 +24,63 @@ See [`PRD.md`](./PRD.md) for the full product vision and roadmap.
 
 ```bash
 npm install
-cp .env.example .env.local      # then add your ANTHROPIC_API_KEY at minimum
+cp .env.example .env.local   # add WAITLIST_WEBHOOK_URL (optional) for now
 npm run dev
 ```
 
-Then open <http://localhost:3000>.
+Open <http://localhost:3000>.
 
 ---
 
 ## Env vars
 
-| Var | Required for | What it does |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | voice training + generation | Calls Claude to extract your voice profile and write drafts. Get one at <https://console.anthropic.com>. |
-| `X_BEARER_TOKEN` | auto-post to X | OAuth 2.0 **user-context** token with `tweet.write` + `users.read`. From <https://developer.x.com>. |
-| `THREADS_USER_ID` | auto-post to Threads | Your numeric Threads user id. |
-| `THREADS_ACCESS_TOKEN` | auto-post to Threads | Long-lived user access token from the Meta Threads Graph API. See <https://developers.facebook.com/docs/threads>. |
-| `WAITLIST_WEBHOOK_URL` | optional | If set, every waitlist signup is POSTed to this URL. Point at a Slack/Discord incoming webhook or a Zapier/Make hook to get pinged in real time. |
+| Var | What it does |
+|---|---|
+| `WAITLIST_WEBHOOK_URL` | Optional. Every signup is POSTed to this URL — point at a Slack / Discord incoming webhook or a Zapier/Make hook to get pinged in real time. |
+| `ANTHROPIC_API_KEY` | Needed for `/train` and `/generate`. Get one at <https://console.anthropic.com>. |
+| `X_BEARER_TOKEN` | Optional. OAuth 2.0 user-context token with `tweet.write` + `users.read`. From <https://developer.x.com>. |
+| `THREADS_USER_ID` + `THREADS_ACCESS_TOKEN` | Optional. Long-lived Meta Threads Graph token. See <https://developers.facebook.com/docs/threads>. |
 
-If publishing tokens aren't set, the app gracefully degrades — every draft still has an **Open in compose** button that pre-fills the platform's composer.
+If publishing tokens aren't set, the generator still works — every draft has an **Open in compose** button that pre-fills the platform's composer.
 
 ---
 
 ## Deploying to Vercel
 
-The fastest path to a shareable URL:
-
 ```bash
-git init && git add -A && git commit -m "tweetforme: initial waitlist + product MVP"
-git remote add origin https://github.com/SreeC22/tweetforme.git
 git push -u origin main
 ```
 
 Then on <https://vercel.com/new>:
 
-1. Import the GitHub repo.
-2. Add `ANTHROPIC_API_KEY` (and optionally `WAITLIST_WEBHOOK_URL`) in **Environment Variables**.
-3. Deploy. You'll have a `tweetforme-xxx.vercel.app` URL in ~60 seconds.
-4. Add the X / Threads tokens later, once you've gotten through the developer-portal flow.
+1. Import the repo.
+2. (Optional now) add `WAITLIST_WEBHOOK_URL`.
+3. (Later) add `ANTHROPIC_API_KEY` + X/Threads tokens to flip on the product.
+4. Deploy. ~60 seconds to a shareable URL.
 
-You can share the deploy URL the moment Step 3 finishes — the waitlist works without any platform tokens.
+For real waitlist persistence beyond a serverless container's lifetime, swap the in-`/tmp` storage in `app/api/waitlist/route.ts` for Vercel KV / Postgres / a Google Sheet via Zapier.
 
 ---
 
-## Architecture
+## Layout
 
 ```
 app/
-  page.tsx                 ← waitlist landing
-  train/page.tsx           ← voice training UI
-  generate/page.tsx        ← generator + publish UI
+  page.tsx                 ← waitlist landing (LIVE)
+  train/page.tsx           ← voice training UI (dormant — no link from /)
+  generate/page.tsx        ← generator + publish UI (dormant — no link from /)
   api/
-    waitlist/route.ts      ← captures emails (webhook + local file)
-    voice/route.ts         ← Claude extracts voice profile
-    generate/route.ts      ← Claude writes drafts in voice
-    post-x/route.ts        ← X API v2 publish (single tweet or thread)
-    post-threads/route.ts  ← Threads Graph API two-step publish
+    waitlist/route.ts      ← captures emails (LIVE)
+    voice/route.ts         ← Claude voice extraction (dormant until ANTHROPIC_API_KEY)
+    generate/route.ts      ← Claude draft generation (dormant)
+    post-x/route.ts        ← X API v2 publish (dormant until token)
+    post-threads/route.ts  ← Threads Graph publish (dormant until token)
 components/
-  WaitlistForm.tsx
-  TrainFlow.tsx
-  GenerateFlow.tsx
+  WaitlistForm.tsx         ← LIVE
+  TrainFlow.tsx            ← dormant
+  GenerateFlow.tsx         ← dormant
 lib/
-  anthropic.ts             ← Claude client + JSON parsing helpers
-  types.ts                 ← Shared TS types
+  anthropic.ts, types.ts   ← dormant
 ```
 
-The Voice Profile lives in your browser's `localStorage` (key
-`tweetforme:voice-profile`). No accounts, no DB — yet. See the PRD for the
-roadmap.
-
----
-
-## Why we built this in 3 hours
-
-Because the only thing better than shipping a product is shipping the
-waitlist for the product before the product is finished.
+To flip the product on later: add a link from `app/page.tsx` to `/train`, set the env vars on Vercel, redeploy. No code rewrite needed.

@@ -6,10 +6,6 @@ export const maxDuration = 30;
 /**
  * Auto-post to X (Twitter) via API v2.
  * Requires an OAuth 2.0 user-context access token with tweet.write + users.read.
- * Set X_BEARER_TOKEN in .env.local.
- *
- * Accepts either { text } for a single tweet or { thread: string[] } for a
- * reply-chain. Returns the URL(s) of the published tweet(s).
  */
 export async function POST(req: NextRequest) {
   const token = process.env.X_BEARER_TOKEN;
@@ -40,7 +36,6 @@ export async function POST(req: NextRequest) {
     let replyToId: string | undefined;
     let username: string | undefined;
 
-    // Resolve username once so we can build URLs
     try {
       const me = await fetch("https://api.x.com/2/users/me", { headers });
       if (me.ok) {
@@ -48,7 +43,7 @@ export async function POST(req: NextRequest) {
         username = j?.data?.username;
       }
     } catch {
-      // optional
+      /* optional */
     }
 
     for (const text of tweets) {

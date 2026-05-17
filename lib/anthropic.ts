@@ -31,7 +31,6 @@ export function asText(res: Anthropic.Message): string {
 export function extractJson<T = unknown>(text: string): T {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = (fenced ? fenced[1] : text).trim();
-  // find first { and last } to be safe
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
   if (start === -1 || end === -1) {

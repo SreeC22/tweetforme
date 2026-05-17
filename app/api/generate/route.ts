@@ -31,10 +31,7 @@ Return ONLY a JSON object of this shape, no prose:
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea, profile } = (await req.json()) as {
-      idea: string;
-      profile: VoiceProfile;
-    };
+    const { idea, profile } = (await req.json()) as { idea: string; profile: VoiceProfile };
 
     if (!idea || !idea.trim()) {
       return NextResponse.json({ error: "Give us an idea to riff on." }, { status: 400 });
@@ -47,7 +44,6 @@ export async function POST(req: NextRequest) {
     }
 
     const client = getAnthropic();
-
     const profileBlock = JSON.stringify(
       {
         summary: profile.summary,

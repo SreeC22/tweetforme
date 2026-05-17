@@ -127,8 +127,7 @@ function DraftCard({ draft }: { draft: Draft }) {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error || "Publish failed.");
-      const url =
-        data?.results?.[0]?.url || data?.url || null;
+      const url = data?.results?.[0]?.url || data?.url || null;
       setPostedUrl(url);
       setStatus("published ✓");
     } catch (err) {
