@@ -1128,7 +1128,24 @@
             }
         }
 
+        // Reset token input border on typing
+        document.addEventListener('DOMContentLoaded', () => {
+            const tokenInput = document.getElementById('xTokenInput');
+            tokenInput.addEventListener('input', () => {
+                tokenInput.style.borderColor = '#2f3336';
+            });
+        });
+
         function submitBrandMaterials() {
+            const token = document.getElementById('xTokenInput').value.trim();
+            if (!token) {
+                document.getElementById('xTokenInput').style.borderColor = '#f4212e';
+                document.getElementById('xTokenInput').setAttribute('placeholder', 'Token is required');
+                document.getElementById('xTokenInput').focus();
+                return;
+            }
+            // Store token locally
+            localStorage.setItem('x_api_token', token);
             closeUpload();
             // Hide empty state, show loading
             document.getElementById('emptyState').style.display = 'none';
