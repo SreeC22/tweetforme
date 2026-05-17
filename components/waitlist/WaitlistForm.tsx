@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type State =
   | { kind: "idle" }
@@ -19,6 +19,17 @@ export default function WaitlistForm({
 }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
+
+  // After a successful signup, briefly show confirmation, then auto-reset
+  // so another email can be entered without a page reload.
+  useEffect(() => {
+    if (state.kind !== "ok") return;
+    const t = setTimeout(() => {
+      setEmail("");
+      setState({ kind: "idle" });
+    }, 3500);
+    return () => clearTimeout(t);
+  }, [state.kind]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +106,16 @@ export default function WaitlistForm({
             }}
           >
             Copy link
+          </button>
+          <button
+            type="button"
+            className="btn-ghost text-sm sm:text-base"
+            onClick={() => {
+              setEmail("");
+              setState({ kind: "idle" });
+            }}
+          >
+            Add another email
           </button>
         </div>
       </div>
