@@ -1408,10 +1408,26 @@
             document.getElementById('statPosted').textContent = posted;
         }
 
+        const regeneratedContent = "AI isn't replacing Product Managers — it's giving us superpowers.\n\nHere are 5 ways AI is already changing how the best PMs work:\n\n1. User research at scale — analyze thousands of interviews in minutes, not weeks\n\n2. Data-driven prioritization — no more gut-feel roadmaps, let the signals guide you\n\n3. Instant first drafts — PRDs, specs, and briefs generated in seconds\n\n4. Proactive churn detection — spot unhappy users before they leave\n\n5. Market intelligence — real-time competitive signals delivered to your inbox\n\nThe PMs who learn to work WITH AI will outship everyone else 10:1.\n\nWhat AI tool has changed your PM workflow the most? #ProductManagement #AI";
+
         function regeneratePost(id) {
             showToast('Regenerating content...');
+            const contentEl = document.querySelector('.full-tweet-content');
+            if (contentEl) {
+                contentEl.style.opacity = '0.3';
+            }
             setTimeout(() => {
-                closeModal();
+                // Update the content in data
+                if (id === 0) {
+                    contentData[id].content = regeneratedContent;
+                    contentData[id].title = "AI isn't replacing PMs — it's giving us superpowers";
+                }
+                // Re-render the modal content without closing
+                const formattedContent = formatTweetText(contentData[id].content);
+                if (contentEl) {
+                    contentEl.innerHTML = formattedContent;
+                    contentEl.style.opacity = '1';
+                }
                 showToast('New version generated');
             }, 2000);
         }
