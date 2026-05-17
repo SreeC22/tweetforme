@@ -1,4 +1,4 @@
-import TrainFlow from "@/components/TrainFlow";
+import TrainFlow from "@/components/voice/TrainFlow";
 import Link from "next/link";
 
 export const metadata = {

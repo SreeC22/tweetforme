@@ -1,86 +1,99 @@
 # tweetforme
 
-> _Your voice. On autopilot._
-> Paste 10 of your past posts. We learn your voice. Then we draft and publish to **X** and **Threads** — without the AI smell.
+> **Your voice. On autopilot.**
 
-## What's live right now
-
-**Waitlist** at `/` — email capture, share-on-X / share-on-Threads buttons, optional webhook ping on every signup. Ship this first to start collecting demand.
-
-## What's built but dormant
-
-The full product code lives in the repo and will work the moment you set `ANTHROPIC_API_KEY` and link to the routes:
-
-- `/train` — paste past posts, Claude extracts a Voice Profile, stored in browser `localStorage`.
-- `/generate` — drop in an idea, get 3 X drafts (one as a thread) + 2 Threads drafts in your voice. Edit, copy, or one-tap publish.
-- `/api/voice`, `/api/generate` — Claude-backed.
-- `/api/post-x`, `/api/post-threads` — official X API v2 and Meta Threads Graph publishing.
-
-See [`PRD.md`](./PRD.md) for the full product vision and roadmap.
+Paste your past posts. We learn your voice. Then we draft and publish to **X** and **Threads** — without the AI smell.
 
 ---
 
-## Quick start
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| AI | Claude (Anthropic SDK) |
+| Publishing | X API v2, Threads Graph API |
+| Hosting | Vercel |
+
+---
+
+## Project Structure
+
+```
+├── app/
+│   ├── page.tsx                  # Landing page
+│   ├── layout.tsx                # Root layout, fonts, meta
+│   ├── globals.css               # Global styles + design tokens
+│   ├── train/
+│   │   └── page.tsx              # Voice training UI
+│   ├── generate/
+│   │   └── page.tsx              # Draft generation + publish UI
+│   └── api/
+│       ├── waitlist/route.ts     # Email capture + webhook relay
+│       ├── voice/route.ts        # Voice profile extraction (Claude)
+│       ├── generate/route.ts     # Draft generation (Claude)
+│       ├── post-x/route.ts       # Publish to X via API v2
+│       └── post-threads/route.ts # Publish to Threads via Graph API
+├── components/
+│   ├── waitlist/
+│   │   └── WaitlistForm.tsx      # Email form + share buttons
+│   ├── voice/
+│   │   └── TrainFlow.tsx         # Paste posts → extract voice
+│   └── generate/
+│       └── GenerateFlow.tsx      # Idea → drafts → publish
+├── lib/
+│   ├── anthropic.ts              # Claude client utilities
+│   └── types.ts                  # Shared types
+├── public/                       # Static assets
+├── .env.example
+├── next.config.mjs
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## Getting Started
 
 ```bash
 npm install
-cp .env.example .env.local   # add WAITLIST_WEBHOOK_URL (optional) for now
+cp .env.example .env.local
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Env vars
+## Environment Variables
 
-| Var | What it does |
-|---|---|
-| `WAITLIST_WEBHOOK_URL` | Optional. Every signup is POSTed to this URL — point at a Slack / Discord incoming webhook or a Zapier/Make hook to get pinged in real time. |
-| `ANTHROPIC_API_KEY` | Needed for `/train` and `/generate`. Get one at <https://console.anthropic.com>. |
-| `X_BEARER_TOKEN` | Optional. OAuth 2.0 user-context token with `tweet.write` + `users.read`. From <https://developer.x.com>. |
-| `THREADS_USER_ID` + `THREADS_ACCESS_TOKEN` | Optional. Long-lived Meta Threads Graph token. See <https://developers.facebook.com/docs/threads>. |
-
-If publishing tokens aren't set, the generator still works — every draft has an **Open in compose** button that pre-fills the platform's composer.
+See `.env.example` for the full list. Only `WAITLIST_WEBHOOK_URL` is needed for the landing page — the rest power the AI generation and publishing features.
 
 ---
 
-## Deploying to Vercel
+## Features
 
-```bash
-git push -u origin main
-```
+1. **Voice Training** — Paste 10-20 past posts. Claude extracts a Voice Profile (tone, vocabulary, sentence patterns, signature moves).
 
-Then on <https://vercel.com/new>:
+2. **Draft Generation** — Drop in a raw idea. Get 3 X drafts (including a thread) and 2 Threads drafts — all in your voice.
 
-1. Import the repo.
-2. (Optional now) add `WAITLIST_WEBHOOK_URL`.
-3. (Later) add `ANTHROPIC_API_KEY` + X/Threads tokens to flip on the product.
-4. Deploy. ~60 seconds to a shareable URL.
-
-For real waitlist persistence beyond a serverless container's lifetime, swap the in-`/tmp` storage in `app/api/waitlist/route.ts` for Vercel KV / Postgres / a Google Sheet via Zapier.
+3. **One-Tap Publish** — Post directly via X API v2 and Threads Graph API, or open in the platform's native composer.
 
 ---
 
-## Layout
+## Deploy
 
-```
-app/
-  page.tsx                 ← waitlist landing (LIVE)
-  train/page.tsx           ← voice training UI (dormant — no link from /)
-  generate/page.tsx        ← generator + publish UI (dormant — no link from /)
-  api/
-    waitlist/route.ts      ← captures emails (LIVE)
-    voice/route.ts         ← Claude voice extraction (dormant until ANTHROPIC_API_KEY)
-    generate/route.ts      ← Claude draft generation (dormant)
-    post-x/route.ts        ← X API v2 publish (dormant until token)
-    post-threads/route.ts  ← Threads Graph publish (dormant until token)
-components/
-  WaitlistForm.tsx         ← LIVE
-  TrainFlow.tsx            ← dormant
-  GenerateFlow.tsx         ← dormant
-lib/
-  anthropic.ts, types.ts   ← dormant
-```
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
-To flip the product on later: add a link from `app/page.tsx` to `/train`, set the env vars on Vercel, redeploy. No code rewrite needed.
+1. Import the repo
+2. Add environment variables
+3. Deploy
+
+---
+
+## License
+
+MIT

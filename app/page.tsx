@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import WaitlistForm from "@/components/WaitlistForm";
+import WaitlistForm from "@/components/waitlist/WaitlistForm";
 
 /* =========================================================================
    tweetforme / v2  —  shader.se-inspired studio waitlist
