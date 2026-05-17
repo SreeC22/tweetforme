@@ -840,25 +840,97 @@
         // Supabase Client
         const SUPABASE_URL = 'https://qiojxbwdzqktlpgilrbg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpb2p4YndkenFrdGxwZ2lscmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjczNDgsImV4cCI6MjA5NDYwMzM0OH0.3axCm5uxWYp0a8T0iyLw0Z-n-rzhubuqPe7BXM2dD7s';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let db = null;
+        let useLocalStorage = false;
+
+        try {
+            db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch(e) {
+            console.warn('Supabase client not available, using localStorage');
+            useLocalStorage = true;
+        }
 
         let contentData = [];
 
-        // Fetch posts from Supabase
-        async function fetchPosts() {
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                .order('scheduled_for', { ascending: false });
-
-            if (error) {
-                console.error('Error fetching posts:', error);
-                return [];
-            }
-            return data || [];
+        // LocalStorage helpers for demo fallback
+        function getLocalPosts() {
+            try {
+                return JSON.parse(localStorage.getItem('demo_posts') || '[]');
+            } catch(e) { return []; }
         }
 
-        // Transform Supabase rows to frontend format
+        function saveLocalPosts(posts) {
+            localStorage.setItem('demo_posts', JSON.stringify(posts));
+        }
+
+        // Fetch posts - tries Supabase, falls back to localStorage
+        async function fetchPosts() {
+            if (!useLocalStorage && db) {
+                try {
+                    const { data, error } = await db
+                        .from('posts')
+                        .select('*')
+                        .order('scheduled_for', { ascending: false });
+
+                    if (error) {
+                        console.warn('Supabase fetch failed, using localStorage:', error.message);
+                        useLocalStorage = true;
+                        return getLocalPosts();
+                    }
+                    return data || [];
+                } catch(e) {
+                    console.warn('Supabase unavailable, using localStorage');
+                    useLocalStorage = true;
+                    return getLocalPosts();
+                }
+            }
+            return getLocalPosts();
+        }
+
+        // Insert posts - tries Supabase, falls back to localStorage
+        async function insertPosts(posts) {
+            if (!useLocalStorage && db) {
+                try {
+                    const { data, error } = await db.from('posts').insert(posts).select();
+                    if (!error && data) return data;
+                    console.warn('Supabase insert failed, using localStorage:', error.message);
+                    useLocalStorage = true;
+                } catch(e) {
+                    useLocalStorage = true;
+                }
+            }
+            // localStorage fallback
+            const existing = getLocalPosts();
+            const withIds = posts.map((p, i) => ({
+                ...p,
+                id: crypto.randomUUID(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }));
+            const all = [...withIds, ...existing];
+            saveLocalPosts(all);
+            return withIds;
+        }
+
+        // Update post status
+        async function updatePostStatus(postId, newStatus) {
+            if (!useLocalStorage && db) {
+                try {
+                    await db.from('posts').update({ status: newStatus }).eq('id', postId);
+                    return;
+                } catch(e) { useLocalStorage = true; }
+            }
+            // localStorage fallback
+            const posts = getLocalPosts();
+            const idx = posts.findIndex(p => p.id === postId);
+            if (idx >= 0) {
+                posts[idx].status = newStatus;
+                posts[idx].updated_at = new Date().toISOString();
+                saveLocalPosts(posts);
+            }
+        }
+
+        // Transform Supabase/local rows to frontend format
         function transformPosts(posts) {
             return posts.map((post, idx) => ({
                 id: idx,
@@ -879,7 +951,7 @@
             }));
         }
 
-        // Update stats from data
+        // Update stats dynamically
         function updateStats(posts) {
             const pending = posts.filter(p => p.status === 'pending').length;
             const scheduled = posts.filter(p => p.status === 'scheduled').length;
@@ -900,7 +972,7 @@
             return (totalLikes / totalViews * 100).toFixed(1) + '%';
         }
 
-        // Initialize app - check Supabase for existing posts
+        // Initialize app
         async function initApp() {
             const posts = await fetchPosts();
             if (posts.length > 0) {
@@ -1258,7 +1330,7 @@
                     currentStep++;
                     setTimeout(advanceStep, 1800);
                 } else {
-                    // Done - insert posts into Supabase then show feed
+                    // Done - insert posts then show feed
                     setTimeout(async () => {
                         loadingState.classList.remove('active');
                         steps.forEach(s => {
@@ -1267,7 +1339,7 @@
                         document.getElementById(steps[0]).classList.add('active');
                         progressBar.style.width = '0%';
 
-                        // Insert sample posts into Supabase
+                        // Insert posts (Supabase or localStorage)
                         const postsToInsert = sampleData.map(item => ({
                             title: item.title,
                             content: item.content,
@@ -1279,16 +1351,9 @@
                             engagement_comments: item.engagement ? (item.engagement.comments || item.engagement.replies) : null
                         }));
 
-                        const { data, error } = await supabase.from('posts').insert(postsToInsert).select();
-
-                        if (error) {
-                            console.error('Supabase insert error:', error);
-                            // Fallback to local sample data
-                            contentData = sampleData;
-                        } else {
-                            contentData = transformPosts(data);
-                            updateStats(data);
-                        }
+                        const inserted = await insertPosts(postsToInsert);
+                        contentData = transformPosts(inserted);
+                        updateStats(inserted);
 
                         renderFeed();
                         showToast('Content generated successfully!');
@@ -1313,10 +1378,11 @@
         async function approvePost(id) {
             const post = contentData[id];
             if (post.dbId) {
-                await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.dbId);
+                await updatePostStatus(post.dbId, 'scheduled');
             }
             contentData[id].status = 'scheduled';
             closeModal();
+            updateStatsFromContentData();
             renderFeed();
             showToast('Post approved and scheduled');
         }
@@ -1324,12 +1390,22 @@
         async function rejectPost(id) {
             const post = contentData[id];
             if (post.dbId) {
-                await supabase.from('posts').update({ status: 'rejected' }).eq('id', post.dbId);
+                await updatePostStatus(post.dbId, 'rejected');
             }
             contentData[id].status = 'draft';
             closeModal();
+            updateStatsFromContentData();
             renderFeed();
             showToast('Post rejected — sent back for revision');
+        }
+
+        function updateStatsFromContentData() {
+            const pending = contentData.filter(p => p.status === 'pending').length;
+            const scheduled = contentData.filter(p => p.status === 'scheduled').length;
+            const posted = contentData.filter(p => p.status === 'posted').length;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statScheduled').textContent = scheduled;
+            document.getElementById('statPosted').textContent = posted;
         }
 
         function regeneratePost(id) {
