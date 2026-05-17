@@ -150,6 +150,100 @@
         }
         .filter-btn:hover:not(.active) { background: rgba(239,243,244,0.1); }
 
+        /* Loading State */
+        .loading-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 40px;
+            text-align: center;
+        }
+        .loading-state.active { display: flex; }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #2f3336;
+            border-top-color: #1d9bf0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 28px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-bottom: 8px;
+        }
+        .loading-state p {
+            font-size: 15px;
+            color: #71767b;
+            max-width: 320px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 300px;
+            width: 100%;
+        }
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #71767b;
+            transition: all 0.3s;
+        }
+        .loading-step.active {
+            color: #e7e9ea;
+        }
+        .loading-step.done {
+            color: #00ba7c;
+        }
+        .loading-step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #2f3336;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        .loading-step.active .loading-step-icon {
+            border-color: #1d9bf0;
+            background: rgba(29,155,240,0.1);
+        }
+        .loading-step.done .loading-step-icon {
+            border-color: #00ba7c;
+            background: rgba(0,186,124,0.1);
+        }
+        .loading-step-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+        .loading-progress {
+            width: 100%;
+            max-width: 300px;
+            height: 4px;
+            background: #2f3336;
+            border-radius: 2px;
+            margin-top: 24px;
+            overflow: hidden;
+        }
+        .loading-progress-bar {
+            height: 100%;
+            background: #1d9bf0;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
         /* Empty State */
         .empty-state {
             display: flex;
@@ -643,6 +737,42 @@
             <button class="btn btn-primary" onclick="openUpload()" style="padding: 12px 24px; font-size: 15px;">Add Brand Materials</button>
         </div>
 
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <h2>Generating your content</h2>
+            <p>Analyzing your brand materials and crafting posts in your voice...</p>
+            <div class="loading-steps">
+                <div class="loading-step active" id="step1">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Analyzing brand materials</span>
+                </div>
+                <div class="loading-step" id="step2">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Learning your voice & tone</span>
+                </div>
+                <div class="loading-step" id="step3">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Crafting posts for your schedule</span>
+                </div>
+                <div class="loading-step" id="step4">
+                    <div class="loading-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>
+                    </div>
+                    <span>Finalizing content queue</span>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
         <!-- Tweet Feed -->
         <div class="tweet-feed" id="tweetFeed" style="display:none;"></div>
     </div>
@@ -688,7 +818,7 @@
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
                     <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
-                    <button class="btn btn-primary">Post</button>
+                    <button class="btn btn-primary" onclick="submitBrandMaterials()">Post</button>
                 </div>
             </div>
         </div>
@@ -697,7 +827,8 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        let contentData = [
+        let contentData = [];
+        const sampleData = [
             {
                 id: 0,
                 title: "5 Ways AI is Transforming Product Management",
@@ -974,6 +1105,56 @@
 
         function closeUpload() {
             document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function submitBrandMaterials() {
+            closeUpload();
+            // Hide empty state, show loading
+            document.getElementById('emptyState').style.display = 'none';
+            document.querySelector('.stats').style.display = 'none';
+            document.querySelector('.filter-bar').style.display = 'none';
+            document.getElementById('tweetFeed').style.display = 'none';
+
+            const loadingState = document.getElementById('loadingState');
+            loadingState.classList.add('active');
+
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            const progressBar = document.getElementById('progressBar');
+            let currentStep = 0;
+
+            // Animate progress bar
+            progressBar.style.width = '10%';
+
+            function advanceStep() {
+                if (currentStep > 0) {
+                    document.getElementById(steps[currentStep - 1]).classList.remove('active');
+                    document.getElementById(steps[currentStep - 1]).classList.add('done');
+                }
+                if (currentStep < steps.length) {
+                    document.getElementById(steps[currentStep]).classList.add('active');
+                    progressBar.style.width = ((currentStep + 1) / steps.length * 100) + '%';
+                    currentStep++;
+                    setTimeout(advanceStep, 1800);
+                } else {
+                    // Done - show the feed
+                    setTimeout(() => {
+                        loadingState.classList.remove('active');
+                        // Reset step states for next time
+                        steps.forEach(s => {
+                            document.getElementById(s).classList.remove('active', 'done');
+                        });
+                        document.getElementById(steps[0]).classList.add('active');
+                        progressBar.style.width = '0%';
+
+                        // Load sample data into feed
+                        contentData = sampleData;
+                        renderFeed();
+                        showToast('Content generated successfully!');
+                    }, 800);
+                }
+            }
+
+            setTimeout(advanceStep, 600);
         }
 
         function filterContent(filter, btn) {
