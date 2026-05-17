@@ -2,7 +2,7 @@ import TrainFlow from "@/components/voice/TrainFlow";
 import Link from "next/link";
 
 export const metadata = {
-  title: "train your voice · tweetforme",
+  title: "Train your voice · echo",
 };
 
 export default function TrainPage() {

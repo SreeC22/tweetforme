@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { VoiceProfile } from "@/lib/types";
 
-const STORAGE_KEY = "tweetforme:voice-profile";
+const STORAGE_KEY = "echo:voice-profile";
 
 const PLACEHOLDER = `Paste one of your past posts here.
 

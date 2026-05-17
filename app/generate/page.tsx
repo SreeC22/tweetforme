@@ -2,7 +2,7 @@ import GenerateFlow from "@/components/generate/GenerateFlow";
 import Link from "next/link";
 
 export const metadata = {
-  title: "generate · tweetforme",
+  title: "Generate · echo",
 };
 
 export default function GeneratePage() {

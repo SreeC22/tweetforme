@@ -23,13 +23,16 @@ const config: Config = {
         },
       },
       fontFamily: {
+        // Wire up the next/font CSS variables defined in app/layout.tsx.
+        // Without this, font-sans / font-display / font-mono fall back to
+        // generic system stacks and the entire design reads like a default
+        // browser page.
         sans: [
           "var(--font-sans)",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
           "Segoe UI",
-          "Inter",
           "sans-serif",
         ],
         display: [

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Draft, VoiceProfile } from "@/lib/types";
 
-const STORAGE_KEY = "tweetforme:voice-profile";
+const STORAGE_KEY = "echo:voice-profile";
 
 export default function GenerateFlow() {
   const [profile, setProfile] = useState<VoiceProfile | null>(null);

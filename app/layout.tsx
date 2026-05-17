@@ -23,13 +23,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tweetforme — your voice. on autopilot.",
+  title: "echo — your voice, on autopilot",
   description:
-    "Paste 10 of your best posts. We learn your voice, then draft and publish to X & Threads — without the AI smell.",
+    "echo learns your writing voice from your past posts, then drafts and publishes to X and Threads — so you sound like you, without spending an hour a day on it.",
   openGraph: {
-    title: "tweetforme",
+    title: "echo",
     description:
-      "Personal-brand posts in your voice, auto-published to X & Threads.",
+      "Your writing voice, on autopilot. echo drafts and publishes posts to X and Threads that actually sound like you.",
   },
 };
 
@@ -43,7 +43,7 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="min-h-screen grain">{children}</body>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }
