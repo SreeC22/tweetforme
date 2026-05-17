@@ -7,699 +7,566 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fb;
-            color: #1a1a2e;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #e7e9ea;
             min-height: 100vh;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+        .container { max-width: 900px; margin: 0 auto; padding: 0; border-left: 1px solid #2f3336; border-right: 1px solid #2f3336; min-height: 100vh; }
 
         /* Header */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 32px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2f3336;
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10;
         }
         .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a1a2e;
+            font-size: 20px;
+            font-weight: 700;
+            color: #e7e9ea;
         }
         .header-actions { display: flex; gap: 12px; }
         .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 8px 18px;
+            border-radius: 9999px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 700;
             cursor: pointer;
             border: none;
             transition: all 0.2s;
         }
         .btn-primary {
-            background: #4f46e5;
+            background: #1d9bf0;
             color: white;
         }
-        .btn-primary:hover { background: #4338ca; }
+        .btn-primary:hover { background: #1a8cd8; }
         .btn-secondary {
-            background: white;
-            color: #374151;
-            border: 1px solid #e5e7eb;
+            background: transparent;
+            color: #e7e9ea;
+            border: 1px solid #536471;
         }
-        .btn-secondary:hover { background: #f9fafb; }
-        .btn-sm { padding: 6px 14px; font-size: 13px; }
+        .btn-secondary:hover { background: #181919; }
+        .btn-sm { padding: 6px 16px; font-size: 13px; }
         .btn-ghost {
             background: transparent;
-            color: #6b7280;
+            color: #71767b;
             padding: 6px 12px;
+            border-radius: 9999px;
         }
-        .btn-ghost:hover { color: #4f46e5; background: #eef2ff; }
+        .btn-ghost:hover { color: #1d9bf0; background: rgba(29,155,240,0.1); }
 
         /* Tabs */
         .tabs {
             display: flex;
-            gap: 4px;
-            margin-bottom: 24px;
-            background: white;
-            padding: 4px;
-            border-radius: 10px;
-            width: fit-content;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border-bottom: 1px solid #2f3336;
         }
         .tab {
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 14px;
+            flex: 1;
+            padding: 16px 0;
+            text-align: center;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
-            color: #6b7280;
+            color: #71767b;
             transition: all 0.2s;
             border: none;
             background: transparent;
+            position: relative;
         }
         .tab.active {
-            background: #4f46e5;
-            color: white;
+            color: #e7e9ea;
+            font-weight: 700;
         }
-        .tab:hover:not(.active) { color: #1a1a2e; background: #f3f4f6; }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 56px;
+            height: 4px;
+            background: #1d9bf0;
+            border-radius: 2px;
+        }
+        .tab:hover { background: rgba(231,233,234,0.03); }
 
         /* Stats Row */
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
+            border-bottom: 1px solid #2f3336;
         }
         .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            padding: 16px 20px;
+            border-right: 1px solid #2f3336;
         }
+        .stat-card:last-child { border-right: none; }
         .stat-card .label {
             font-size: 13px;
-            color: #6b7280;
+            color: #71767b;
             margin-bottom: 4px;
         }
         .stat-card .value {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #e7e9ea;
         }
         .stat-card .change {
-            font-size: 12px;
-            color: #10b981;
-            margin-top: 4px;
+            font-size: 13px;
+            color: #00ba7c;
+            margin-top: 2px;
         }
 
-        /* Table */
-        .table-wrapper {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-            overflow: hidden;
-        }
-        .table-header {
+        /* Filter Bar */
+        .filter-bar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid #f3f4f6;
+            padding: 12px 20px;
+            gap: 8px;
+            border-bottom: 1px solid #2f3336;
         }
-        .table-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .filter-group { display: flex; gap: 8px; }
         .filter-btn {
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            color: #374151;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #536471;
+            background: transparent;
+            color: #e7e9ea;
             cursor: pointer;
+            transition: all 0.2s;
         }
         .filter-btn.active {
-            background: #eef2ff;
-            border-color: #c7d2fe;
-            color: #4f46e5;
+            background: #e7e9ea;
+            color: #0f1419;
+            border-color: #e7e9ea;
         }
-        table {
+        .filter-btn:hover:not(.active) { background: rgba(239,243,244,0.1); }
+
+        /* Tweet-style Content Cards */
+        .tweet-feed { }
+        .tweet-card {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2f3336;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tweet-card:hover { background: rgba(231,233,234,0.03); }
+        .tweet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2f3336;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #e7e9ea;
+            overflow: hidden;
+        }
+        .tweet-avatar img {
             width: 100%;
-            border-collapse: collapse;
+            height: 100%;
+            object-fit: cover;
         }
-        th {
-            text-align: left;
-            padding: 12px 24px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #f3f4f6;
+        .tweet-body { flex: 1; min-width: 0; }
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
         }
-        td {
-            padding: 16px 24px;
-            font-size: 14px;
-            border-bottom: 1px solid #f9fafb;
-            vertical-align: middle;
+        .tweet-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e7e9ea;
         }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: #fafbfc; }
+        .tweet-verified {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tweet-verified svg { width: 18px; height: 18px; }
+        .tweet-handle {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .tweet-time {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .tweet-dot {
+            color: #71767b;
+            font-size: 15px;
+            padding: 0 4px;
+        }
+        .tweet-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #e7e9ea;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .tweet-content .hashtag { color: #1d9bf0; }
+        .tweet-content .mention { color: #1d9bf0; }
 
-        /* Content Title */
-        .content-title {
-            font-weight: 500;
-            color: #1a1a2e;
-            margin-bottom: 2px;
+        /* Tweet Engagement Row */
+        .tweet-actions {
+            display: flex;
+            justify-content: space-between;
+            max-width: 425px;
+            margin-top: 4px;
         }
-        .content-platform {
-            font-size: 12px;
-            color: #9ca3af;
+        .tweet-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #71767b;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
         }
+        .tweet-action:hover { color: #1d9bf0; }
+        .tweet-action.reply:hover { color: #1d9bf0; }
+        .tweet-action.repost:hover { color: #00ba7c; }
+        .tweet-action.like:hover { color: #f91880; }
+        .tweet-action.views:hover { color: #1d9bf0; }
+        .tweet-action svg { width: 18px; height: 18px; }
 
-        /* Status Badges */
+        /* Status & Meta on tweet cards */
+        .tweet-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 2px 10px;
+            border-radius: 4px;
             font-size: 12px;
-            font-weight: 500;
-            white-space: nowrap;
+            font-weight: 700;
         }
         .badge-pending {
-            background: #fef3c7;
-            color: #d97706;
+            background: rgba(255,212,0,0.1);
+            color: #ffd400;
         }
         .badge-scheduled {
-            background: #dbeafe;
-            color: #2563eb;
+            background: rgba(29,155,240,0.1);
+            color: #1d9bf0;
         }
         .badge-posted {
-            background: #d1fae5;
-            color: #059669;
+            background: rgba(0,186,124,0.1);
+            color: #00ba7c;
         }
         .badge-draft {
-            background: #f3f4f6;
-            color: #6b7280;
+            background: rgba(113,118,123,0.1);
+            color: #71767b;
         }
-
-        /* Engagement */
-        .engagement {
-            display: flex;
-            gap: 12px;
+        .tweet-schedule {
             font-size: 13px;
-            color: #6b7280;
+            color: #71767b;
         }
-        .engagement span { display: flex; align-items: center; gap: 4px; }
+        .tweet-platform {
+            font-size: 13px;
+            color: #71767b;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tweet-platform .platform-icon {
+            width: 14px;
+            height: 14px;
+        }
 
-        /* Actions */
-        .actions { display: flex; gap: 6px; }
+        /* Three-dot menu */
+        .tweet-more {
+            margin-left: auto;
+            padding: 4px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #71767b;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+        }
+        .tweet-more:hover { color: #1d9bf0; background: rgba(29,155,240,0.1); }
 
-        /* Upload Modal */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
+            background: rgba(91,112,131,0.4);
             z-index: 100;
             align-items: center;
             justify-content: center;
         }
         .modal-overlay.active { display: flex; }
         .modal {
-            background: white;
+            background: #000;
             border-radius: 16px;
-            padding: 32px;
             width: 100%;
-            max-width: 520px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .modal h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .modal p {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-        .upload-zone {
-            border: 2px dashed #e5e7eb;
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 20px;
-        }
-        .upload-zone:hover {
-            border-color: #4f46e5;
-            background: #fafafe;
-        }
-        .upload-zone .icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-        .upload-zone .label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-        }
-        .upload-zone .hint {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-top: 4px;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #4f46e5;
-        }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        /* Content Preview Modal */
-        .preview-modal {
-            max-width: 720px;
+            max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
+            border: 1px solid #2f3336;
         }
-        .preview-content {
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.7;
-            color: #374151;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-            position: relative;
-        }
-        .preview-meta {
+        .modal-header {
             display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            font-size: 13px;
-            color: #6b7280;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #2f3336;
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
         }
+        .modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #e7e9ea;
+            font-size: 18px;
+        }
+        .modal-close:hover { background: rgba(239,243,244,0.1); }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-left: 24px;
+        }
+
+        /* Full Tweet in Modal */
+        .full-tweet {
+            padding: 16px 20px;
+        }
+        .full-tweet .tweet-avatar {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+        .full-tweet-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .full-tweet-names {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-tweet-names .tweet-name {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .full-tweet-names .tweet-handle {
+            font-size: 15px;
+            color: #71767b;
+        }
+        .full-tweet-content {
+            font-size: 17px;
+            line-height: 1.5;
+            color: #e7e9ea;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .full-tweet-content .hashtag { color: #1d9bf0; }
+        .full-tweet-content .mention { color: #1d9bf0; }
+        .full-tweet-timestamp {
+            font-size: 15px;
+            color: #71767b;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2f3336;
+        }
+        .full-tweet-stats {
+            display: flex;
+            gap: 20px;
+            padding: 16px 0;
+            border-bottom: 1px solid #2f3336;
+            font-size: 14px;
+        }
+        .full-tweet-stats span {
+            color: #71767b;
+        }
+        .full-tweet-stats strong {
+            color: #e7e9ea;
+            font-weight: 700;
+        }
+        .full-tweet-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-bottom: 1px solid #2f3336;
+        }
+        .full-tweet-actions .tweet-action {
+            padding: 8px 12px;
+        }
+        .full-tweet-actions .tweet-action svg { width: 22px; height: 22px; }
+
+        /* Review Section in Modal */
+        .review-section {
+            padding: 16px 20px;
+            border-top: 1px solid #2f3336;
+        }
+        .review-section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e7e9ea;
+            margin-bottom: 12px;
+        }
+        .review-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn-approve {
+            background: #00ba7c;
+            color: white;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-approve:hover { background: #00a06a; }
+        .btn-reject {
+            background: transparent;
+            color: #f4212e;
+            border: 1px solid #67070f;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-reject:hover { background: rgba(244,33,46,0.1); }
+        .btn-regen {
+            background: transparent;
+            color: #1d9bf0;
+            border: 1px solid #1d4e7e;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .btn-regen:hover { background: rgba(29,155,240,0.1); }
+
         .feedback-input {
             width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 12px 16px;
+            border: 1px solid #2f3336;
+            border-radius: 12px;
+            font-size: 15px;
             outline: none;
-            margin-bottom: 12px;
+            background: #000;
+            color: #e7e9ea;
             resize: vertical;
             min-height: 60px;
         }
-        .feedback-input:focus { border-color: #4f46e5; }
-        .feedback-input::placeholder { color: #9ca3af; }
+        .feedback-input:focus { border-color: #1d9bf0; }
+        .feedback-input::placeholder { color: #71767b; }
 
-        /* Approval Workflow */
+        /* Feedback Chips */
+        .feedback-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .feedback-chip {
+            padding: 6px 14px; border-radius: 9999px; font-size: 13px;
+            background: transparent; color: #e7e9ea; cursor: pointer;
+            border: 1px solid #536471; transition: all 0.15s; font-weight: 500;
+        }
+        .feedback-chip:hover { background: rgba(29,155,240,0.1); border-color: #1d9bf0; color: #1d9bf0; }
+        .feedback-chip.selected { background: rgba(29,155,240,0.1); border-color: #1d9bf0; color: #1d9bf0; }
+
+        /* Status Bar */
         .review-status-bar {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 13px;
-        }
-        .review-status-bar.status-approved { background: #f0fdf4; border-color: #bbf7d0; }
-        .review-status-bar.status-rejected { background: #fef2f2; border-color: #fecaca; }
-        .review-status-bar .status-icon {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; flex-shrink: 0;
-        }
-        .review-status-bar .status-icon.pending { background: #fef3c7; }
-        .review-status-bar .status-icon.approved { background: #d1fae5; }
-        .review-status-bar .status-icon.rejected { background: #fecaca; }
-        .review-status-bar .status-text { flex: 1; color: #374151; }
-        .review-status-bar .status-label { font-weight: 600; }
-
-        /* Version History */
-        .version-history { border-top: 1px solid #f3f4f6; margin-top: 16px; padding-top: 12px; }
-        .version-toggle {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; font-weight: 500; color: #6b7280;
-            cursor: pointer; user-select: none;
-        }
-        .version-toggle:hover { color: #4f46e5; }
-        .version-toggle .chevron { transition: transform 0.2s; }
-        .version-toggle .chevron.open { transform: rotate(90deg); }
-        .version-list { display: none; margin-top: 10px; }
-        .version-list.show { display: block; }
-        .version-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
-            font-size: 13px; cursor: pointer; border: 1px solid transparent;
-        }
-        .version-item:hover { background: #f9fafb; }
-        .version-item.active { background: #eef2ff; border-color: #c7d2fe; }
-        .version-item .v-num {
-            width: 22px; height: 22px; border-radius: 6px;
-            background: #f3f4f6; display: flex; align-items: center;
-            justify-content: center; font-size: 11px; font-weight: 600; color: #6b7280;
-            margin-right: 10px;
-        }
-        .version-item.active .v-num { background: #4f46e5; color: white; }
-        .version-item .v-label { color: #374151; font-weight: 500; }
-        .version-item .v-meta { color: #9ca3af; font-size: 11px; }
-        .version-item .v-badge {
-            font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
-        }
-        .version-item .v-badge.rejected { background: #fef2f2; color: #dc2626; }
-        .version-item .v-badge.current { background: #dbeafe; color: #2563eb; }
-
-        /* Feedback Chips */
-        .feedback-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-        .feedback-chip {
-            padding: 5px 12px; border-radius: 16px; font-size: 12px;
-            background: #f3f4f6; color: #374151; cursor: pointer;
-            border: 1px solid transparent; transition: all 0.15s;
-        }
-        .feedback-chip:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
-        .feedback-chip.selected { background: #eef2ff; border-color: #4f46e5; color: #4f46e5; }
-
-        /* Action Buttons */
-        .btn-approve { background: #059669; color: white; }
-        .btn-approve:hover { background: #047857; }
-        .btn-reject { background: white; color: #dc2626; border: 1px solid #fecaca; }
-        .btn-reject:hover { background: #fef2f2; }
-        .btn-regen { background: white; color: #4f46e5; border: 1px solid #c7d2fe; }
-        .btn-regen:hover { background: #eef2ff; }
-
-        /* Spinner */
-        .regen-overlay {
-            position: absolute; inset: 0; background: rgba(255,255,255,0.92);
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; border-radius: 10px; gap: 10px;
-        }
-        .spinner {
-            width: 26px; height: 26px; border: 3px solid #e5e7eb;
-            border-top-color: #4f46e5; border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .regen-label { font-size: 13px; color: #6b7280; font-weight: 500; }
-
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 4px;
-            padding: 20px;
-        }
-        .page-btn {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            font-size: 13px;
-            border: none;
-            background: transparent;
-            color: #6b7280;
-            cursor: pointer;
-        }
-        .page-btn.active {
-            background: #4f46e5;
-            color: white;
-        }
-        .page-btn:hover:not(.active) { background: #f3f4f6; }
-
-        /* Calendar View */
-        .calendar-grid {
-            display: none;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            background: #e5e7eb;
+            background: rgba(255,212,0,0.05);
+            border: 1px solid rgba(255,212,0,0.2);
             border-radius: 12px;
-            overflow: hidden;
-        }
-        .calendar-grid.active { display: grid; }
-        .cal-header {
-            background: #f9fafb;
-            padding: 12px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-        }
-        .cal-day {
-            background: white;
-            padding: 12px;
-            min-height: 100px;
-            position: relative;
-        }
-        .cal-day .date {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-        .cal-event {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            margin-bottom: 4px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .cal-event.twitter { background: #dbeafe; color: #2563eb; }
-        .cal-event.linkedin { background: #d1fae5; color: #059669; }
-        .cal-event.instagram { background: #fce7f3; color: #db2777; }
-
-        /* Step Dots */
-        .step-dot {
-            width: 32px;
-            height: 4px;
-            border-radius: 2px;
-            background: #e5e7eb;
-            transition: all 0.3s;
-        }
-        .step-dot.active {
-            background: #4f46e5;
-            width: 48px;
-        }
-        .step-dot.done {
-            background: #10b981;
-        }
-
-        /* Validation */
-        .required { color: #ef4444; }
-        .field-hint {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-top: 4px;
-        }
-        .field-error {
-            font-size: 12px;
-            color: #ef4444;
-            margin-top: 4px;
-            display: none;
-        }
-        .field-error.show { display: block; }
-        .validation-msg {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #ef4444;
-            margin-bottom: 12px;
-            padding: 8px 12px;
-            background: #fef2f2;
-            border-radius: 6px;
-        }
-        .form-group input.invalid,
-        .form-group textarea.invalid {
-            border-color: #ef4444;
-        }
-        .form-group input.valid,
-        .form-group textarea.valid {
-            border-color: #10b981;
-        }
-
-        /* File list */
-        .file-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        .file-item .file-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .file-item .file-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: #eef2ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #4f46e5;
-        }
-        .file-item .file-name { color: #374151; font-weight: 500; }
-        .file-item .file-size { color: #9ca3af; font-size: 12px; }
-        .file-item .remove-btn {
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-            border-radius: 4px;
-        }
-        .file-item .remove-btn:hover { color: #ef4444; background: #fef2f2; }
-
-        /* Checkbox Group */
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .checkbox-label:has(input:checked) {
-            background: #eef2ff;
-            border-color: #c7d2fe;
-            color: #4f46e5;
-        }
-        .checkbox-label input { display: none; }
-
-        /* Tag Input */
-        .tag-input-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 8px 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            min-height: 42px;
-            align-items: center;
-            cursor: text;
-        }
-        .tag-input-wrapper:focus-within { border-color: #4f46e5; }
-        .tag-input {
-            border: none !important;
-            outline: none !important;
-            padding: 2px 4px !important;
-            font-size: 14px;
-            flex: 1;
-            min-width: 120px;
-        }
-        .topic-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            background: #eef2ff;
-            color: #4f46e5;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .topic-tag .tag-remove {
-            cursor: pointer;
-            opacity: 0.6;
+            margin-bottom: 16px;
             font-size: 14px;
         }
-        .topic-tag .tag-remove:hover { opacity: 1; }
-
-        /* Upload zone states */
-        .upload-zone.dragover {
-            border-color: #4f46e5;
-            background: #eef2ff;
-        }
-        .upload-zone.has-files {
-            border-style: solid;
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
+        .review-status-bar.status-approved { background: rgba(0,186,124,0.05); border-color: rgba(0,186,124,0.2); }
+        .review-status-bar.status-rejected { background: rgba(244,33,46,0.05); border-color: rgba(244,33,46,0.2); }
+        .review-status-bar .status-text { flex: 1; color: #e7e9ea; }
+        .review-status-bar .status-label { font-weight: 700; }
 
         /* Toast */
         .toast {
             position: fixed;
             bottom: 24px;
-            right: 24px;
-            background: #1a1a2e;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #1d9bf0;
             color: white;
             padding: 14px 24px;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
             opacity: 0;
-            transform: translateY(10px);
             transition: all 0.3s;
             z-index: 200;
         }
         .toast.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
+
+        /* Thread connector */
+        .thread-line {
+            width: 2px;
+            background: #2f3336;
+            margin: 0 auto;
+            height: 100%;
+            position: absolute;
+            left: 19px;
+            top: 56px;
+            bottom: 0;
+        }
+        .tweet-card { position: relative; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2f3336; border-radius: 2px; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Content Pipeline</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openUpload()">Add Brand Materials</button>
+            </div>
+        </div>
 
 
         <!-- Stats -->
         <div class="stats">
             <div class="stat-card">
-                <div class="label">Pending Approval</div>
+                <div class="label">Pending Review</div>
                 <div class="value">4</div>
                 <div class="change">2 new today</div>
             </div>
@@ -720,972 +587,383 @@
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="table-wrapper" id="tableView">
-            <div class="table-header">
-                <h2>Content Calendar</h2>
-                <div class="filter-group">
-                    <button class="filter-btn active" onclick="filterContent('all', this)">All</button>
-                    <button class="filter-btn" onclick="filterContent('pending', this)">Pending</button>
-                    <button class="filter-btn" onclick="filterContent('scheduled', this)">Scheduled</button>
-                    <button class="filter-btn" onclick="filterContent('posted', this)">Posted</button>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <table>
-                <thead>
-                    <tr>
-                        <th>Content</th>
-                        <th>Status</th>
-                        <th>Scheduled For</th>
-                        <th>Engagement</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="contentTable">
-                    <tr data-status="pending">
-                        <td>
-                            <div class="content-title">5 Ways AI is Transforming Product Management</div>
-                            <div class="content-platform">LinkedIn</div>
-                        </td>
-                        <td><span class="badge badge-pending">Pending Approval</span></td>
-                        <td>May 19, 2026 - 9:00 AM</td>
-                        <td><span style="color:#9ca3af">--</span></td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-primary" onclick="openPreview(0)">Review</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="pending">
-                        <td>
-                            <div class="content-title">Behind the Scenes: Our Sprint Planning Process</div>
-                            <div class="content-platform">Twitter / X</div>
-                        </td>
-                        <td><span class="badge badge-pending">Pending Approval</span></td>
-                        <td>May 19, 2026 - 12:00 PM</td>
-                        <td><span style="color:#9ca3af">--</span></td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-primary" onclick="openPreview(1)">Review</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="scheduled">
-                        <td>
-                            <div class="content-title">Customer Spotlight: How Acme Scaled 3x</div>
-                            <div class="content-platform">LinkedIn</div>
-                        </td>
-                        <td><span class="badge badge-scheduled">Scheduled</span></td>
-                        <td>May 20, 2026 - 10:00 AM</td>
-                        <td><span style="color:#9ca3af">--</span></td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-ghost" onclick="openPreview(2)">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="scheduled">
-                        <td>
-                            <div class="content-title">The Future of Remote Collaboration [Thread]</div>
-                            <div class="content-platform">Twitter / X</div>
-                        </td>
-                        <td><span class="badge badge-scheduled">Scheduled</span></td>
-                        <td>May 20, 2026 - 2:00 PM</td>
-                        <td><span style="color:#9ca3af">--</span></td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-ghost" onclick="openPreview(3)">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="posted">
-                        <td>
-                            <div class="content-title">Why We Bet Big on User Research</div>
-                            <div class="content-platform">LinkedIn</div>
-                        </td>
-                        <td><span class="badge badge-posted">Posted</span></td>
-                        <td>May 16, 2026 - 9:00 AM</td>
-                        <td>
-                            <div class="engagement">
-                                <span>847 views</span>
-                                <span>42 likes</span>
-                                <span>12 comments</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-ghost" onclick="openPreview(4)">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="posted">
-                        <td>
-                            <div class="content-title">Hot take: PRDs are dead. Here's what replaced them.</div>
-                            <div class="content-platform">Twitter / X</div>
-                        </td>
-                        <td><span class="badge badge-posted">Posted</span></td>
-                        <td>May 15, 2026 - 11:30 AM</td>
-                        <td>
-                            <div class="engagement">
-                                <span>2.1K views</span>
-                                <span>156 likes</span>
-                                <span>38 replies</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-ghost" onclick="openPreview(5)">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="posted">
-                        <td>
-                            <div class="content-title">Product roadmap prioritization framework</div>
-                            <div class="content-platform">Instagram</div>
-                        </td>
-                        <td><span class="badge badge-posted">Posted</span></td>
-                        <td>May 14, 2026 - 8:00 AM</td>
-                        <td>
-                            <div class="engagement">
-                                <span>1.4K views</span>
-                                <span>89 likes</span>
-                                <span>7 saves</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-ghost" onclick="openPreview(6)">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-status="pending">
-                        <td>
-                            <div class="content-title">Metrics that matter: Leading vs lagging indicators</div>
-                            <div class="content-platform">LinkedIn</div>
-                        </td>
-                        <td><span class="badge badge-pending">Pending Approval</span></td>
-                        <td>May 21, 2026 - 9:00 AM</td>
-                        <td><span style="color:#9ca3af">--</span></td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-sm btn-primary" onclick="openPreview(7)">Review</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="pagination">
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">></button>
-            </div>
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterContent('all', this)">All</button>
+            <button class="filter-btn" onclick="filterContent('pending', this)">Pending</button>
+            <button class="filter-btn" onclick="filterContent('scheduled', this)">Scheduled</button>
+            <button class="filter-btn" onclick="filterContent('posted', this)">Posted</button>
         </div>
 
-        <!-- Calendar View -->
-        <div class="calendar-grid" id="calendarView">
-            <div class="cal-header">Mon</div>
-            <div class="cal-header">Tue</div>
-            <div class="cal-header">Wed</div>
-            <div class="cal-header">Thu</div>
-            <div class="cal-header">Fri</div>
-            <div class="cal-header">Sat</div>
-            <div class="cal-header">Sun</div>
-            <div class="cal-day">
-                <div class="date">12</div>
+        <!-- Tweet Feed -->
+        <div class="tweet-feed" id="tweetFeed"></div>
+    </div>
+
+    <!-- Tweet Detail Modal -->
+    <div class="modal-overlay" id="tweetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <span class="modal-title">Post</span>
             </div>
-            <div class="cal-day">
-                <div class="date">13</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">14</div>
-                <div class="cal-event instagram">Roadmap framework</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">15</div>
-                <div class="cal-event twitter">PRDs are dead</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">16</div>
-                <div class="cal-event linkedin">User Research</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">17</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">18</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">19</div>
-                <div class="cal-event linkedin">AI in PM</div>
-                <div class="cal-event twitter">Sprint Planning</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">20</div>
-                <div class="cal-event linkedin">Customer Spotlight</div>
-                <div class="cal-event twitter">Remote Collab</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">21</div>
-                <div class="cal-event linkedin">Metrics</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">22</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">23</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">24</div>
-            </div>
-            <div class="cal-day">
-                <div class="date">25</div>
-            </div>
+            <div id="modalContent"></div>
         </div>
     </div>
 
     <!-- Upload Modal -->
     <div class="modal-overlay" id="uploadModal">
-        <div class="modal" style="max-width:580px;">
-            <!-- Step Indicator -->
-            <div style="display:flex;gap:8px;margin-bottom:24px;">
-                <div class="step-dot active" id="step1dot"></div>
-                <div class="step-dot" id="step2dot"></div>
-                <div class="step-dot" id="step3dot"></div>
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeUpload()">&times;</button>
+                <span class="modal-title">Add Brand Materials</span>
             </div>
-
-            <!-- Step 1: Brand Upload -->
-            <div id="formStep1">
-                <h2>Upload Brand Materials</h2>
-                <p>We'll analyze your brand voice, tone, and style to generate on-brand content.</p>
-
-                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                    <div class="icon">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    </div>
-                    <div class="label">Drop files here or click to browse</div>
-                    <div class="hint">PDF, DOCX, PNG, JPG, SVG — Max 25MB per file</div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Content</label>
+                    <textarea class="feedback-input" placeholder="What's happening?" style="min-height:120px;"></textarea>
+                    <div style="font-size:12px; color:#71767b; text-align:right; margin-top:4px;">0 / 280</div>
                 </div>
-                <input type="file" id="fileInput" hidden multiple accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.svg,.txt">
-
-                <!-- Uploaded Files List -->
-                <div id="fileList" style="margin-bottom:16px;"></div>
-
-                <!-- Validation message -->
-                <div class="validation-msg" id="uploadValidation" style="display:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>Upload at least one brand file to continue</span>
-                </div>
-
-                <div style="font-size:12px;color:#9ca3af;margin-bottom:20px;">
-                    <strong style="color:#6b7280;">Accepted materials:</strong> Brand guidelines, tone of voice docs, style guides, past social posts, logos, color palettes
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="goToStep(2)" id="step1Next">Continue</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Audience & Platforms -->
-            <div id="formStep2" style="display:none;">
-                <h2>Define Your Audience</h2>
-                <p>Tell us who you're creating content for so we can optimize tone and topics.</p>
-
-                <div class="form-group">
-                    <label>Target Audience <span class="required">*</span></label>
-                    <input type="text" id="audienceInput" placeholder="e.g., Product managers at B2B SaaS companies" oninput="validateField(this, 'audience')">
-                    <div class="field-hint">Be specific — industry, role, seniority level</div>
-                    <div class="field-error" id="audienceError">Target audience is required (min 10 characters)</div>
-                </div>
-                <div class="form-group">
-                    <label>Platforms <span class="required">*</span></label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label"><input type="checkbox" value="linkedin" checked onchange="validatePlatforms()"> LinkedIn</label>
-                        <label class="checkbox-label"><input type="checkbox" value="twitter" checked onchange="validatePlatforms()"> Twitter / X</label>
-                        <label class="checkbox-label"><input type="checkbox" value="instagram" onchange="validatePlatforms()"> Instagram</label>
-                        <label class="checkbox-label"><input type="checkbox" value="threads" onchange="validatePlatforms()"> Threads</label>
-                        <label class="checkbox-label"><input type="checkbox" value="tiktok" onchange="validatePlatforms()"> TikTok</label>
-                    </div>
-                    <div class="field-error" id="platformError">Select at least one platform</div>
-                </div>
-                <div class="form-group">
-                    <label>Brand Voice Description <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
-                    <textarea id="voiceInput" placeholder="e.g., Professional but approachable, data-driven, occasionally witty. Avoid jargon." style="min-height:70px;"></textarea>
-                    <div class="field-hint">If left blank, we'll infer voice from your uploaded materials</div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
-                    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
-                </div>
-            </div>
-
-            <!-- Step 3: Schedule & Topics -->
-            <div id="formStep3" style="display:none;">
-                <h2>Schedule & Topics</h2>
-                <p>Set your posting cadence and preferred content themes.</p>
-
-                <div class="form-group">
-                    <label>Content Frequency <span class="required">*</span></label>
-                    <select id="frequencySelect">
-                        <option value="3">3x per week</option>
-                        <option value="5">5x per week (weekdays)</option>
-                        <option value="7">Daily</option>
-                        <option value="2">2x per week</option>
-                        <option value="1">1x per week</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Preferred Posting Times</label>
-                    <div style="display:flex;gap:12px;">
-                        <div style="flex:1;">
-                            <select id="timeSlot1">
-                                <option value="09:00">9:00 AM</option>
-                                <option value="10:00">10:00 AM</option>
-                                <option value="11:00">11:00 AM</option>
-                                <option value="12:00">12:00 PM</option>
-                                <option value="14:00">2:00 PM</option>
-                                <option value="17:00">5:00 PM</option>
-                            </select>
-                        </div>
-                        <div style="flex:1;">
-                            <select id="timezone">
-                                <option>EST</option>
-                                <option>PST</option>
-                                <option>CST</option>
-                                <option>UTC</option>
-                                <option>GMT</option>
-                            </select>
-                        </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Platform</label>
+                    <div style="display:flex; gap:8px;">
+                        <button class="filter-btn active">X / Twitter</button>
+                        <button class="filter-btn">Threads</button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Topics / Themes <span style="color:#9ca3af;font-weight:400;">(optional)</span></label>
-                    <div id="topicTags" class="tag-input-wrapper">
-                        <input type="text" id="topicInput" class="tag-input" placeholder="Type a topic and press Enter" onkeydown="handleTopicKey(event)">
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Posting Frequency</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="">Times</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select>
+                        <span style="color:#71767b; font-size:14px;">times per</span>
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
                     </div>
-                    <div class="field-hint">Press Enter to add topics. We'll distribute content across themes evenly.</div>
                 </div>
-                <div class="form-group">
-                    <label>Calendar Duration</label>
-                    <select id="durationSelect">
-                        <option value="2">2 weeks</option>
-                        <option value="4" selected>4 weeks (1 month)</option>
-                        <option value="8">8 weeks (2 months)</option>
-                    </select>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
-                    <button class="btn btn-primary" onclick="submitCampaign()" id="submitBtn">Generate Calendar</button>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
+                    <button class="btn btn-primary">Post</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Approval & Feedback Modal -->
-    <div class="modal-overlay" id="previewModal">
-        <div class="modal preview-modal">
-            <!-- Header with version -->
-            <div class="review-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
-                <div>
-                    <h2 id="previewTitle" style="margin:0 0 4px 0;font-size:18px;">Content Preview</h2>
-                    <div class="preview-meta" style="margin-bottom:0;">
-                        <span id="previewPlatform">LinkedIn</span>
-                        <span>&middot;</span>
-                        <span id="previewDate">May 19, 2026 - 9:00 AM</span>
-                    </div>
-                </div>
-                <span class="version-badge" id="versionBadge" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;background:#eef2ff;color:#4f46e5;">v1</span>
-            </div>
-
-            <!-- Status Bar -->
-            <div class="review-status-bar" id="reviewStatusBar">
-                <div class="status-icon pending" id="statusIcon">&#9679;</div>
-                <div class="status-text">
-                    <span class="status-label" id="statusLabel">Awaiting your review</span>
-                    <span id="statusDetail"> &mdash; Review the content below and approve, reject, or request changes.</span>
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="preview-content" id="previewContent" style="position:relative;">
-                Loading...
-            </div>
-
-            <!-- Feedback Section (for pending items) -->
-            <div id="feedbackSection">
-                <div class="feedback-chips" id="feedbackChips">
-                    <span class="feedback-chip" onclick="toggleChip(this)">Make it shorter</span>
-                    <span class="feedback-chip" onclick="toggleChip(this)">More casual tone</span>
-                    <span class="feedback-chip" onclick="toggleChip(this)">Add a statistic</span>
-                    <span class="feedback-chip" onclick="toggleChip(this)">Stronger CTA</span>
-                    <span class="feedback-chip" onclick="toggleChip(this)">More storytelling</span>
-                </div>
-                <textarea class="feedback-input" id="feedbackInput" placeholder="Add specific feedback for regeneration (e.g., 'Reference our Q1 metrics' or 'Match the tone of our last viral post')"></textarea>
-            </div>
-
-            <!-- Version History -->
-            <div class="version-history" id="versionHistory" style="display:none;">
-                <div class="version-toggle" onclick="toggleVersionList()">
-                    <span class="chevron" id="versionChevron">&#9654;</span>
-                    <span>Version History</span>
-                    <span id="versionCount" style="color:#9ca3af;font-size:12px;">(1 version)</span>
-                </div>
-                <div class="version-list" id="versionList"></div>
-            </div>
-
-            <!-- Actions -->
-            <div id="previewActions" style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #f3f4f6;margin-top:16px;">
-                <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
-                <button class="btn btn-reject" id="btnReject" onclick="rejectContent()">Reject</button>
-                <button class="btn btn-regen" id="btnRegen" onclick="regenerateContent()">Regenerate</button>
-                <button class="btn btn-approve" id="btnApprove" onclick="approveContent()">Approve &amp; Schedule</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
         const contentData = [
             {
+                id: 0,
                 title: "5 Ways AI is Transforming Product Management",
-                platform: "LinkedIn",
-                date: "May 19, 2026 - 9:00 AM",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
                 status: "pending",
-                content: "The AI revolution isn't coming for product managers — it's already here, and the best PMs are leveraging it as a superpower.\n\nHere are 5 ways AI is fundamentally changing how we build products:\n\n1. User research at scale — AI can analyze thousands of support tickets and interviews in minutes, surfacing patterns humans would miss.\n\n2. Prioritization backed by data — No more gut feelings. AI models can predict feature impact based on historical usage patterns.\n\n3. Spec writing on autopilot — First drafts of PRDs, user stories, and acceptance criteria generated in seconds.\n\n4. Real-time competitive intelligence — Automated monitoring of competitor launches, pricing changes, and market shifts.\n\n5. Personalized roadmap communication — Tailor roadmap updates to each stakeholder's interests automatically.\n\nThe PMs who thrive in 2026 won't be replaced by AI — they'll be the ones who learned to wield it first.\n\nWhat's your experience? Which of these has had the biggest impact on your workflow?"
+                scheduledFor: "May 19, 2026 · 9:00 AM",
+                content: "5 Ways AI is Transforming Product Management\n\nProduct management is evolving faster than ever. Here's how AI is reshaping our craft:\n\n1. Automated user research synthesis — no more spending days reading through interview transcripts\n\n2. Predictive prioritization — data-driven stack ranking that actually works\n\n3. Smart PRD generation — first drafts in seconds, not hours\n\n4. Real-time sentiment analysis — know how users feel before they churn\n\n5. Intelligent roadmap suggestions — based on market signals and user behavior\n\nThe PMs who embrace these tools will ship 10x faster.\n\nWhich one excites you most? Drop a comment below.",
+                engagement: null,
+                avatar: "TF"
             },
             {
+                id: 1,
                 title: "Behind the Scenes: Our Sprint Planning Process",
+                handle: "@tweetforme",
+                name: "TweetForMe",
                 platform: "Twitter / X",
-                date: "May 19, 2026 - 12:00 PM",
                 status: "pending",
-                content: "People ask how our team ships so fast. Here's the secret: our sprint planning takes 30 min, not 3 hours.\n\nThe framework:\n\n1/ Pre-work > meetings. Every ticket has context BEFORE planning starts. No explaining in real-time.\n\n2/ Capacity is sacred. We plan to 70% capacity. The other 30% handles the inevitable surprises.\n\n3/ One metric per sprint. Not five goals. ONE north star the whole team rallies around.\n\n4/ Demo > status update. We show working software, not slide decks.\n\nResult: 94% sprint completion rate, team morale through the roof.\n\nSteal this. Your team will thank you."
+                scheduledFor: "May 19, 2026 · 12:00 PM",
+                content: "Behind the scenes: our sprint planning process\n\nWe ditched story points. Here's what we do instead:\n\n→ Focus on outcomes, not output\n→ 1-day tasks max (if it's bigger, break it down)\n→ Every ticket has a \"definition of done\" AND a \"definition of impact\"\n→ PMs attend standup Mon & Thu only\n\nResult? 40% faster cycle time. Engineers happier. PMs less burnt out.\n\nThe old way was killing us. This saved our team. #ProductManagement #Agile",
+                engagement: null,
+                avatar: "TF"
             },
             {
-                title: "Customer Spotlight: How Acme Scaled 3x",
-                platform: "LinkedIn",
-                date: "May 20, 2026 - 10:00 AM",
-                status: "scheduled",
-                content: "When Acme Corp came to us, they were processing 10K orders/day. Twelve months later? 30K+ — with the same team size.\n\nHere's what we learned building alongside them:\n\nThe bottleneck wasn't technology. It was process. Their team was spending 60% of time on manual workflows that should have been automated on day one.\n\nWe focused on three high-leverage automations:\n- Order routing logic (saved 4hrs/day)\n- Customer communication sequences (saved 6hrs/day)\n- Reporting and reconciliation (saved 3hrs/day)\n\n13 hours freed up daily. That's not efficiency — that's a transformation.\n\nThe lesson for PMs: Before building new features, audit where your users spend time on repetitive tasks. The biggest wins are often the least glamorous."
-            },
-            {
-                title: "The Future of Remote Collaboration [Thread]",
-                platform: "Twitter / X",
-                date: "May 20, 2026 - 2:00 PM",
-                status: "scheduled",
-                content: "Hot take: Most 'collaboration tools' are actually 'notification tools' in disguise.\n\nHere's what actually works for remote teams in 2026:\n\n1/ Async-first, sync-when-needed. Default to written communication. Meet only when alignment requires real-time dialogue.\n\n2/ Context over access. Giving everyone access to everything creates noise. Curate context for each role.\n\n3/ Outcomes > hours. Track what shipped, not who was online at 9am.\n\nThe best remote teams I've seen don't need more tools. They need fewer tools, used with more discipline."
-            },
-            {
-                title: "Why We Bet Big on User Research",
-                platform: "LinkedIn",
-                date: "May 16, 2026 - 9:00 AM",
-                status: "posted",
-                content: "Last quarter we paused feature development for 2 weeks to do pure user research.\n\nOur board thought we were crazy. Our team was skeptical.\n\nThe result? We killed 3 features on our roadmap that users didn't actually want, and discovered 2 massive pain points we'd completely missed.\n\nROI of that 2-week pause: ~$400K in saved development costs + a 34% increase in user satisfaction scores the following quarter.\n\nUser research isn't a 'nice to have.' It's the highest-leverage activity in product development.\n\nIf you're building without talking to users weekly, you're guessing. And guessing is expensive."
-            },
-            {
-                title: "Hot take: PRDs are dead. Here's what replaced them.",
-                platform: "Twitter / X",
-                date: "May 15, 2026 - 11:30 AM",
-                status: "posted",
-                content: "PRDs are dead.\n\nNot because documentation is bad — because 20-page docs that nobody reads are bad.\n\nWhat replaced them at top teams:\n\n1/ One-pagers with clear problem statements\n2/ Figma prototypes that SHOW instead of tell\n3/ Recorded Loom walkthroughs for context\n4/ Living tickets that evolve with the build\n\nThe goal was never 'write a PRD.' It was 'align the team.' Use whatever format actually achieves that.\n\n(Yes, I'm a PM saying this. No, I don't miss writing 20-page specs.)"
-            },
-            {
-                title: "Product roadmap prioritization framework",
-                platform: "Instagram",
-                date: "May 14, 2026 - 8:00 AM",
-                status: "posted",
-                content: "[Carousel Post]\n\nSlide 1: The RICE framework is broken. Here's what we use instead.\n\nSlide 2: Problem with RICE — Confidence scores are subjective, Effort estimates are always wrong, It ignores strategic alignment.\n\nSlide 3: Our framework: Impact x Urgency x Alignment / Complexity\n\nSlide 4: Impact = How many users benefit? How much does it move our north star metric?\n\nSlide 5: Urgency = Is there a deadline? Will waiting make it harder?\n\nSlide 6: Alignment = Does it serve our current OKRs? Does it strengthen our moat?\n\nSlide 7: Complexity ≠ Effort. It's about unknowns, dependencies, and risk.\n\nSlide 8: Save this for your next prioritization session. DM me for the Notion template."
-            },
-            {
+                id: 2,
                 title: "Metrics that matter: Leading vs lagging indicators",
-                platform: "LinkedIn",
-                date: "May 21, 2026 - 9:00 AM",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Threads",
                 status: "pending",
-                content: "Every PM tracks revenue. Smart PMs track what PREDICTS revenue.\n\nThe difference between leading and lagging indicators is the difference between driving with a windshield vs a rearview mirror.\n\nLagging (what happened): Revenue, churn rate, NPS score\nLeading (what's about to happen): Feature activation rate, time-to-value, support ticket volume\n\nExample: If your activation rate drops 10% this week, you KNOW churn will spike in 30 days. That's a 30-day head start on fixing it.\n\nMy rule: For every lagging metric on your dashboard, identify 2-3 leading indicators that predict it. Then watch those daily.\n\nWhat leading indicators does your team track?"
+                scheduledFor: "May 21, 2026 · 9:00 AM",
+                content: "Metrics that matter: Leading vs lagging indicators\n\nMost PMs track the wrong metrics. They obsess over revenue (lagging) while ignoring activation rate (leading).\n\nLeading indicators predict the future:\n• Feature adoption rate\n• Time to first value\n• NPS trend direction\n• Weekly active usage\n\nLagging indicators confirm the past:\n• Revenue\n• Churn rate\n• Customer lifetime value\n• Market share\n\nYou need both — but if you're only tracking lagging indicators, you're driving by looking in the rearview mirror.\n\nStart with ONE leading metric this sprint. Which will you pick?",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 3,
+                title: "Customer Spotlight: How Acme Scaled 3x",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Threads",
+                status: "scheduled",
+                scheduledFor: "May 20, 2026 · 10:00 AM",
+                content: "Customer Spotlight: How Acme Corp scaled 3x in 6 months\n\nWhen Acme came to us, they were drowning in manual processes. Their PM team was spending 60% of their time on status updates.\n\nWe helped them:\n✅ Automate sprint reporting\n✅ Set up real-time dashboards\n✅ Implement async decision-making\n✅ Cut meeting time by 50%\n\n6 months later: 3x revenue, same team size.\n\nThe bottleneck was never talent. It was tooling.\n\nFull case study in the comments. 👇",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 4,
+                title: "The Future of Remote Collaboration [Thread]",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "scheduled",
+                scheduledFor: "May 20, 2026 · 2:00 PM",
+                content: "The future of remote collaboration — a thread 🧵\n\nAfter 3 years fully remote, here are the non-obvious lessons we learned about making distributed teams work:\n\n1/ Async by default, sync by exception.\n\nEvery meeting should have a \"could this be a doc?\" check. 80% of the time, the answer is yes.\n\n2/ Documentation is your product.\n\nIf it's not written down, it doesn't exist. We treat our internal docs with the same rigor as our product.\n\n3/ Time zones are a feature, not a bug.\n\nOur SF team hands off to London who hands off to Singapore. The product literally gets built 24/7.\n\n4/ Over-communicate context, not status.\n\nNobody needs another \"just checking in\" message. Share the WHY behind decisions.\n\n5/ Build in-person time strategically.\n\nWe do quarterly offsites focused on relationship building. Zero laptops allowed.\n\nRemote isn't harder — it's different. Optimize for it.",
+                engagement: null,
+                avatar: "TF"
+            },
+            {
+                id: 5,
+                title: "Why We Bet Big on User Research",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Threads",
+                status: "posted",
+                scheduledFor: "May 16, 2026 · 9:00 AM",
+                content: "Why we bet big on user research (and it 10x'd our conversion)\n\nLast quarter, we paused feature development for 2 weeks. The entire product team did nothing but talk to users.\n\nEngineering leadership was nervous. Sales was frustrated. But we learned:\n\n• Users didn't want more features — they wanted fewer, better ones\n• Our onboarding was losing 40% of users at step 3\n• The #1 requested feature was something we'd already built (but buried in settings)\n\nWe shipped 3 changes in the next sprint. Conversion jumped 10x.\n\nThe lesson: talking to users isn't a nice-to-have. It's the highest-ROI activity a PM can do.\n\nWhen's the last time you watched a user try your product?",
+                engagement: { views: "847", likes: "42", comments: "12" },
+                avatar: "TF"
+            },
+            {
+                id: 6,
+                title: "Hot take: PRDs are dead. Here's what replaced them.",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "posted",
+                scheduledFor: "May 15, 2026 · 11:30 AM",
+                content: "Hot take: PRDs are dead.\n\nHere's what replaced them at the best product teams:\n\n→ 1-pagers with clear problem statements\n→ Figma prototypes that tell the story\n→ 5-min Loom walkthroughs\n→ Living docs that evolve with the product\n\nThe 30-page PRD that nobody reads? That's organizational theater.\n\nShip the context, not the document. #ProductManagement",
+                engagement: { views: "2.1K", likes: "156", replies: "38" },
+                avatar: "TF"
+            },
+            {
+                id: 7,
+                title: "Product roadmap prioritization framework",
+                handle: "@tweetforme",
+                name: "TweetForMe",
+                platform: "Twitter / X",
+                status: "posted",
+                scheduledFor: "May 14, 2026 · 8:00 AM",
+                content: "The prioritization framework we use for our roadmap:\n\nFor each feature, score 1-5 on:\n• User pain (how much does this hurt?)\n• Business impact (does it move a metric?)\n• Confidence (do we have evidence?)\n• Effort (can we ship in 1 sprint?)\n\nMultiply pain × impact × confidence, divide by effort.\n\nStack rank. Ship top 3. Ignore everything else until next cycle.\n\nSimple > sophisticated. Every time. #ProductManagement #Roadmap",
+                engagement: { views: "1.4K", likes: "89", comments: "7" },
+                avatar: "TF"
             }
         ];
 
-        let currentPreviewIndex = 0;
-        let uploadedFiles = [];
-        let currentStep = 1;
-        let topics = [];
+        function renderFeed(filter = 'all') {
+            const feed = document.getElementById('tweetFeed');
+            const filtered = filter === 'all' ? contentData : contentData.filter(c => c.status === filter);
 
-        // Version history per content item
-        const versionHistory = {};
-        contentData.forEach((item, i) => {
-            versionHistory[i] = [{
-                version: 1,
-                content: item.content,
-                status: item.status === 'pending' ? 'current' : 'approved',
-                feedback: null,
-                timestamp: 'Generated May 17, 2026'
-            }];
-        });
+            feed.innerHTML = filtered.map((item, idx) => {
+                const statusBadge = `<span class="badge badge-${item.status}">${item.status === 'pending' ? 'Pending Review' : item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span>`;
 
-        // Upload Modal
-        function openUploadModal() {
-            document.getElementById('uploadModal').classList.add('active');
-            resetForm();
+                // Truncate content for feed view
+                const truncated = item.content.length > 180 ? item.content.substring(0, 180) + '...' : item.content;
+                const formattedContent = formatTweetText(truncated);
+
+                const engagementHtml = item.engagement ? `
+                    <div class="tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                            <span>${item.engagement.comments || item.engagement.replies || '0'}</span>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                            <span>0</span>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                            <span>${item.engagement.likes}</span>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                            <span>${item.engagement.views}</span>
+                        </button>
+                    </div>
+                ` : `
+                    <div class="tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                        </button>
+                    </div>
+                `;
+
+                return `
+                    <div class="tweet-card" data-status="${item.status}" onclick="openPreview(${item.id})">
+                        <div class="tweet-avatar">${item.avatar}</div>
+                        <div class="tweet-body">
+                            <div class="tweet-header">
+                                <span class="tweet-name">${item.name}</span>
+                                <span class="tweet-verified"><svg viewBox="0 0 22 22" fill="#1d9bf0"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.855-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.69-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.636.433 1.221.878 1.69.47.446 1.055.752 1.69.883.635.13 1.294.083 1.902-.143.271.586.702 1.084 1.24 1.438.538.354 1.167.551 1.813.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path></svg></span>
+                                <span class="tweet-handle">${item.handle}</span>
+                                <span class="tweet-dot">·</span>
+                                <span class="tweet-time">${item.scheduledFor.split('·')[0].trim().replace(', 2026', '')}</span>
+                                <button class="tweet-more" onclick="event.stopPropagation()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path></svg>
+                                </button>
+                            </div>
+                            <div class="tweet-meta">
+                                ${statusBadge}
+                                <span class="tweet-platform">${item.platform}</span>
+                                <span class="tweet-schedule">${item.scheduledFor}</span>
+                            </div>
+                            <div class="tweet-content">${formattedContent}</div>
+                            ${engagementHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
-        function closeUploadModal() {
+
+        function formatTweetText(text) {
+            return text
+                .replace(/(#\w+)/g, '<span class="hashtag">$1</span>')
+                .replace(/(@\w+)/g, '<span class="mention">$1</span>');
+        }
+
+        function openPreview(id) {
+            const item = contentData[id];
+            const modal = document.getElementById('tweetModal');
+            const content = document.getElementById('modalContent');
+
+            const formattedContent = formatTweetText(item.content);
+
+            const engagementStats = item.engagement ? `
+                <div class="full-tweet-stats">
+                    ${item.engagement.views ? `<span><strong>${item.engagement.views}</strong> Views</span>` : ''}
+                    ${item.engagement.likes ? `<span><strong>${item.engagement.likes}</strong> Likes</span>` : ''}
+                    ${item.engagement.comments ? `<span><strong>${item.engagement.comments}</strong> Comments</span>` : ''}
+                    ${item.engagement.replies ? `<span><strong>${item.engagement.replies}</strong> Replies</span>` : ''}
+                </div>
+            ` : '';
+
+            const reviewSection = item.status === 'pending' ? `
+                <div class="review-section">
+                    <div class="review-status-bar">
+                        <span class="status-text"><span class="status-label">Pending Review</span> — Awaiting your approval before scheduling</span>
+                    </div>
+                    <h3>Quick Feedback</h3>
+                    <div class="feedback-chips">
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Too long</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Wrong tone</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Needs data</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Off brand</span>
+                        <span class="feedback-chip" onclick="this.classList.toggle('selected')">Great as-is</span>
+                    </div>
+                    <textarea class="feedback-input" placeholder="Add notes for revision..."></textarea>
+                    <div class="review-actions">
+                        <button class="btn btn-approve" onclick="approvePost(${id})">Approve</button>
+                        <button class="btn btn-reject" onclick="rejectPost(${id})">Reject</button>
+                        <button class="btn btn-regen" onclick="regeneratePost(${id})">Regenerate</button>
+                    </div>
+                </div>
+            ` : '';
+
+            content.innerHTML = `
+                <div class="full-tweet">
+                    <div class="full-tweet-header">
+                        <div class="tweet-avatar">${item.avatar}</div>
+                        <div class="full-tweet-names">
+                            <span class="tweet-name" style="display:flex;align-items:center;gap:4px;">${item.name} <svg width="18" height="18" viewBox="0 0 22 22" fill="#1d9bf0"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.855-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.69-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.636.433 1.221.878 1.69.47.446 1.055.752 1.69.883.635.13 1.294.083 1.902-.143.271.586.702 1.084 1.24 1.438.538.354 1.167.551 1.813.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path></svg></span>
+                            <span class="tweet-handle">${item.handle}</span>
+                        </div>
+                    </div>
+                    <div class="full-tweet-content">${formattedContent}</div>
+                    <div class="full-tweet-timestamp">${item.scheduledFor} · ${item.platform}</div>
+                    ${engagementStats}
+                    <div class="full-tweet-actions">
+                        <button class="tweet-action reply">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                        </button>
+                        <button class="tweet-action repost">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2h4v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H13V4h3.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action like">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.7-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.97.846 4.17-.514 6.67z"></path></svg>
+                        </button>
+                        <button class="tweet-action views">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.75 21V3h2v18h-2zM18.75 21V8.5h2V21h-2zM13.75 21v-9h2v9h-2zM3.75 21v-4h2v4h-2z"></path></svg>
+                        </button>
+                        <button class="tweet-action">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                ${reviewSection}
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tweetModal').classList.remove('active');
+        }
+
+        function openUpload() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUpload() {
             document.getElementById('uploadModal').classList.remove('active');
         }
-        function resetForm() {
-            currentStep = 1;
-            uploadedFiles = [];
-            topics = [];
-            updateStepDisplay();
-            renderFileList();
-            document.getElementById('uploadValidation').style.display = 'none';
-        }
 
-        // Step Navigation
-        function goToStep(step) {
-            if (step === 2 && !validateStep1()) return;
-            if (step === 3 && !validateStep2()) return;
-            currentStep = step;
-            updateStepDisplay();
-        }
-        function updateStepDisplay() {
-            document.getElementById('formStep1').style.display = currentStep === 1 ? 'block' : 'none';
-            document.getElementById('formStep2').style.display = currentStep === 2 ? 'block' : 'none';
-            document.getElementById('formStep3').style.display = currentStep === 3 ? 'block' : 'none';
-            ['step1dot','step2dot','step3dot'].forEach((id, i) => {
-                const dot = document.getElementById(id);
-                dot.className = 'step-dot';
-                if (i + 1 === currentStep) dot.classList.add('active');
-                else if (i + 1 < currentStep) dot.classList.add('done');
-            });
-        }
-
-        // Validation
-        function validateStep1() {
-            if (uploadedFiles.length === 0) {
-                document.getElementById('uploadValidation').style.display = 'flex';
-                return false;
-            }
-            document.getElementById('uploadValidation').style.display = 'none';
-            return true;
-        }
-        function validateStep2() {
-            let valid = true;
-            const audience = document.getElementById('audienceInput');
-            if (!audience.value || audience.value.length < 10) {
-                audience.classList.add('invalid');
-                audience.classList.remove('valid');
-                document.getElementById('audienceError').classList.add('show');
-                valid = false;
-            }
-            if (!validatePlatforms()) valid = false;
-            return valid;
-        }
-        function validateField(input, field) {
-            const errorEl = document.getElementById(field + 'Error');
-            if (field === 'audience') {
-                if (input.value.length >= 10) {
-                    input.classList.remove('invalid');
-                    input.classList.add('valid');
-                    errorEl.classList.remove('show');
-                } else {
-                    input.classList.add('invalid');
-                    input.classList.remove('valid');
-                }
-            }
-        }
-        function validatePlatforms() {
-            const checked = document.querySelectorAll('.checkbox-group input:checked');
-            const errorEl = document.getElementById('platformError');
-            if (checked.length === 0) {
-                errorEl.classList.add('show');
-                return false;
-            }
-            errorEl.classList.remove('show');
-            return true;
-        }
-
-        // File Upload
-        const ALLOWED_TYPES = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/png','image/jpeg','image/svg+xml','text/plain'];
-        const MAX_FILE_SIZE = 25 * 1024 * 1024;
-        const MAX_FILES = 10;
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            handleFiles(Array.from(e.target.files));
-        });
-
-        // Drag and drop
-        const uploadZone = document.getElementById('uploadZone');
-        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-        uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
-            handleFiles(Array.from(e.dataTransfer.files));
-        });
-
-        function handleFiles(files) {
-            files.forEach(file => {
-                if (uploadedFiles.length >= MAX_FILES) {
-                    showToast('Maximum 10 files allowed');
-                    return;
-                }
-                if (file.size > MAX_FILE_SIZE) {
-                    showToast(`${file.name} exceeds 25MB limit`);
-                    return;
-                }
-                const ext = '.' + file.name.split('.').pop().toLowerCase();
-                const validExts = ['.pdf','.doc','.docx','.png','.jpg','.jpeg','.svg','.txt'];
-                if (!validExts.includes(ext)) {
-                    showToast(`${file.name}: unsupported file type`);
-                    return;
-                }
-                uploadedFiles.push({ name: file.name, size: file.size, type: ext });
-            });
-            renderFileList();
-            document.getElementById('uploadValidation').style.display = 'none';
-            if (uploadedFiles.length > 0) uploadZone.classList.add('has-files');
-        }
-        function removeFile(index) {
-            uploadedFiles.splice(index, 1);
-            renderFileList();
-            if (uploadedFiles.length === 0) uploadZone.classList.remove('has-files');
-        }
-        function renderFileList() {
-            const list = document.getElementById('fileList');
-            if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
-            list.innerHTML = uploadedFiles.map((f, i) => `
-                <div class="file-item">
-                    <div class="file-info">
-                        <div class="file-icon">${f.type.replace('.','').toUpperCase()}</div>
-                        <div>
-                            <div class="file-name">${f.name}</div>
-                            <div class="file-size">${(f.size / 1024).toFixed(0)} KB</div>
-                        </div>
-                    </div>
-                    <button class="remove-btn" onclick="removeFile(${i})">x</button>
-                </div>
-            `).join('');
-        }
-
-        // Topics
-        function handleTopicKey(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const val = e.target.value.trim();
-                if (val && topics.length < 8) {
-                    topics.push(val);
-                    e.target.value = '';
-                    renderTopics();
-                } else if (topics.length >= 8) {
-                    showToast('Maximum 8 topics');
-                }
-            }
-        }
-        function removeTopic(i) {
-            topics.splice(i, 1);
-            renderTopics();
-        }
-        function renderTopics() {
-            const wrapper = document.getElementById('topicTags');
-            const input = document.getElementById('topicInput');
-            wrapper.innerHTML = topics.map((t, i) => `
-                <span class="topic-tag">${t} <span class="tag-remove" onclick="removeTopic(${i})">x</span></span>
-            `).join('');
-            wrapper.appendChild(input);
-        }
-
-        // Submit
-        function submitCampaign() {
-            closeUploadModal();
-            showToast('Analyzing brand materials...');
-            setTimeout(() => showToast('Generating content calendar...'), 1500);
-            setTimeout(() => showToast('Done! 12 posts ready for review.'), 4000);
-        }
-        function openPreview(index) {
-            currentPreviewIndex = index;
-            const item = contentData[index];
-            const versions = versionHistory[index];
-            const currentVersion = versions[versions.length - 1];
-
-            document.getElementById('previewTitle').textContent = item.title;
-            document.getElementById('previewPlatform').textContent = item.platform;
-            document.getElementById('previewDate').textContent = item.date;
-            document.getElementById('previewContent').innerHTML = currentVersion.content.replace(/\n/g, '<br>');
-            document.getElementById('versionBadge').textContent = 'v' + currentVersion.version;
-
-            const feedbackSection = document.getElementById('feedbackSection');
-            const btnReject = document.getElementById('btnReject');
-            const btnRegen = document.getElementById('btnRegen');
-            const btnApprove = document.getElementById('btnApprove');
-            const statusBar = document.getElementById('reviewStatusBar');
-            const statusIcon = document.getElementById('statusIcon');
-            const statusLabel = document.getElementById('statusLabel');
-            const statusDetail = document.getElementById('statusDetail');
-            const historySection = document.getElementById('versionHistory');
-
-            // Reset chips
-            document.querySelectorAll('.feedback-chip').forEach(c => c.classList.remove('selected'));
-            document.getElementById('feedbackInput').value = '';
-
-            if (item.status === 'pending') {
-                feedbackSection.style.display = 'block';
-                btnReject.style.display = '';
-                btnRegen.style.display = '';
-                btnApprove.style.display = '';
-                statusBar.className = 'review-status-bar';
-                statusIcon.className = 'status-icon pending';
-                statusIcon.innerHTML = '&#9679;';
-                statusLabel.textContent = 'Awaiting your review';
-                statusDetail.innerHTML = ' &mdash; Review the content below and approve, reject, or request changes.';
-            } else if (item.status === 'scheduled') {
-                feedbackSection.style.display = 'none';
-                btnReject.style.display = 'none';
-                btnRegen.style.display = 'none';
-                btnApprove.style.display = 'none';
-                statusBar.className = 'review-status-bar status-approved';
-                statusIcon.className = 'status-icon approved';
-                statusIcon.innerHTML = '&#10003;';
-                statusLabel.textContent = 'Approved & scheduled';
-                statusDetail.innerHTML = ' &mdash; This content will be posted on ' + item.date + '.';
-            } else if (item.status === 'posted') {
-                feedbackSection.style.display = 'none';
-                btnReject.style.display = 'none';
-                btnRegen.style.display = 'none';
-                btnApprove.style.display = 'none';
-                statusBar.className = 'review-status-bar status-approved';
-                statusIcon.className = 'status-icon approved';
-                statusIcon.innerHTML = '&#10003;';
-                statusLabel.textContent = 'Published';
-                statusDetail.innerHTML = ' &mdash; Posted on ' + item.date + '.';
-            }
-
-            // Version history
-            if (versions.length > 1) {
-                historySection.style.display = 'block';
-                document.getElementById('versionCount').textContent = '(' + versions.length + ' versions)';
-                renderVersionList(index);
-            } else {
-                historySection.style.display = versions.length > 0 ? 'block' : 'none';
-                document.getElementById('versionCount').textContent = '(' + versions.length + ' version)';
-                renderVersionList(index);
-            }
-
-            document.getElementById('previewModal').classList.add('active');
-        }
-
-        function renderVersionList(index) {
-            const versions = versionHistory[index];
-            const list = document.getElementById('versionList');
-            list.innerHTML = versions.map((v, i) => `
-                <div class="version-item ${i === versions.length - 1 ? 'active' : ''}" onclick="viewVersion(${index}, ${i})">
-                    <div style="display:flex;align-items:center;">
-                        <div class="v-num">${v.version}</div>
-                        <div>
-                            <div class="v-label">${v.feedback ? 'Regenerated' : 'Original'}</div>
-                            <div class="v-meta">${v.timestamp}${v.feedback ? ' &middot; "' + v.feedback.substring(0, 30) + (v.feedback.length > 30 ? '...' : '') + '"' : ''}</div>
-                        </div>
-                    </div>
-                    <span class="v-badge ${v.status}">${v.status === 'current' ? 'Current' : v.status === 'rejected' ? 'Rejected' : v.status === 'approved' ? 'Approved' : ''}</span>
-                </div>
-            `).join('');
-        }
-
-        function viewVersion(contentIndex, versionIndex) {
-            const version = versionHistory[contentIndex][versionIndex];
-            document.getElementById('previewContent').innerHTML = version.content.replace(/\n/g, '<br>');
-            document.getElementById('versionBadge').textContent = 'v' + version.version;
-            // Update active state
-            document.querySelectorAll('.version-item').forEach((el, i) => {
-                el.classList.toggle('active', i === versionIndex);
-            });
-        }
-
-        function toggleVersionList() {
-            const list = document.getElementById('versionList');
-            const chevron = document.getElementById('versionChevron');
-            list.classList.toggle('show');
-            chevron.classList.toggle('open');
-        }
-
-        function toggleChip(el) {
-            el.classList.toggle('selected');
-            // Build feedback from selected chips
-            const selected = document.querySelectorAll('.feedback-chip.selected');
-            if (selected.length > 0 && !document.getElementById('feedbackInput').value) {
-                const hints = Array.from(selected).map(c => c.textContent);
-                document.getElementById('feedbackInput').placeholder = 'Selected: ' + hints.join(', ') + ' — add more detail...';
-            } else {
-                document.getElementById('feedbackInput').placeholder = "Add specific feedback for regeneration (e.g., 'Reference our Q1 metrics')";
-            }
-        }
-
-        function closePreviewModal() {
-            document.getElementById('previewModal').classList.remove('active');
-            document.getElementById('feedbackInput').value = '';
-            document.getElementById('versionList').classList.remove('show');
-            document.getElementById('versionChevron').classList.remove('open');
-        }
-
-        function approveContent() {
-            const index = currentPreviewIndex;
-            contentData[index].status = 'scheduled';
-            const versions = versionHistory[index];
-            versions[versions.length - 1].status = 'approved';
-            closePreviewModal();
-            showToast('Content approved and scheduled for ' + contentData[index].date);
-            renderTable();
-            updateStats();
-        }
-
-        function rejectContent() {
-            const index = currentPreviewIndex;
-            const feedback = document.getElementById('feedbackInput').value;
-            const chips = Array.from(document.querySelectorAll('.feedback-chip.selected')).map(c => c.textContent);
-            const fullFeedback = [...chips, feedback].filter(Boolean).join('; ');
-
-            if (!fullFeedback) {
-                document.getElementById('feedbackInput').style.borderColor = '#ef4444';
-                document.getElementById('feedbackInput').placeholder = 'Please provide feedback explaining why this was rejected...';
-                return;
-            }
-
-            const versions = versionHistory[index];
-            versions[versions.length - 1].status = 'rejected';
-            closePreviewModal();
-            showToast('Content rejected. Feedback saved for regeneration.');
-        }
-
-        function regenerateContent() {
-            const index = currentPreviewIndex;
-            const feedback = document.getElementById('feedbackInput').value;
-            const chips = Array.from(document.querySelectorAll('.feedback-chip.selected')).map(c => c.textContent);
-            const fullFeedback = [...chips, feedback].filter(Boolean).join('; ');
-
-            // Mark current version as rejected
-            const versions = versionHistory[index];
-            versions[versions.length - 1].status = 'rejected';
-
-            // Show regenerating state
-            const contentEl = document.getElementById('previewContent');
-            contentEl.innerHTML = '<div class="regen-overlay"><div class="spinner"></div><span class="regen-label">Regenerating with your feedback...</span></div>' + contentEl.innerHTML;
-
-            // Disable buttons during regeneration
-            document.getElementById('btnApprove').disabled = true;
-            document.getElementById('btnRegen').disabled = true;
-            document.getElementById('btnReject').disabled = true;
-
-            // Simulate regeneration
-            setTimeout(() => {
-                const newVersion = {
-                    version: versions.length + 1,
-                    content: generateNewVersion(index, fullFeedback),
-                    status: 'current',
-                    feedback: fullFeedback || 'Regenerated',
-                    timestamp: 'Regenerated just now'
-                };
-                versions.push(newVersion);
-
-                // Update the display
-                contentEl.innerHTML = newVersion.content.replace(/\n/g, '<br>');
-                document.getElementById('versionBadge').textContent = 'v' + newVersion.version;
-                document.getElementById('versionCount').textContent = '(' + versions.length + ' versions)';
-                document.getElementById('versionHistory').style.display = 'block';
-                renderVersionList(index);
-
-                // Re-enable buttons
-                document.getElementById('btnApprove').disabled = false;
-                document.getElementById('btnRegen').disabled = false;
-                document.getElementById('btnReject').disabled = false;
-
-                // Reset feedback
-                document.getElementById('feedbackInput').value = '';
-                document.querySelectorAll('.feedback-chip').forEach(c => c.classList.remove('selected'));
-
-                showToast('New version generated — review and approve when ready');
-            }, 2500);
-        }
-
-        function generateNewVersion(index, feedback) {
-            // Simulated regeneration with slight modifications
-            const original = contentData[index].content;
-            const modifications = {
-                0: "AI isn't replacing product managers — it's making the great ones unstoppable.\n\nAfter 6 months of integrating AI into our PM workflow, here's what actually moved the needle:\n\n1. Research synthesis — We went from 2 weeks of interview analysis to 2 hours. AI surfaces patterns across 500+ user conversations instantly.\n\n2. Data-backed prioritization — Our RICE scores now incorporate predictive models trained on 3 years of feature performance data. Gut feeling? Gone.\n\n3. First-draft automation — PRDs, user stories, release notes — AI handles the blank page problem so PMs can focus on strategy.\n\n4. Competitive radar — Real-time alerts when competitors ship, change pricing, or update positioning. No more quarterly research sprints.\n\n5. Stakeholder communication — Personalized roadmap updates generated for each audience (exec team gets metrics, eng gets specs, sales gets timelines).\n\nThe ROI: Our team shipped 40% more features this quarter with the same headcount.\n\nWhat AI tools are in your PM stack? Drop them below — building a community resource list.",
-                1: "Our sprint planning is 30 min. Completion rate: 94%.\n\nHere's the exact playbook:\n\n1/ Async pre-work is mandatory. Every ticket has a 3-line brief BEFORE planning. No cold reads.\n\n2/ We capacity-plan to 70%. Not 100%. Not 80%. Seventy. The buffer isn't waste — it's what keeps us from death-marching.\n\n3/ One sprint = one metric. We pick the ONE number that matters this cycle. Everything else is supporting cast.\n\n4/ Demos over updates. Every Friday we show working software. No slides. No \"it's almost done.\"\n\nResult: Team morale is high, stakeholders trust our estimates, and we haven't missed a sprint in 4 months.\n\nBookmark this. Try it next Monday. Report back.",
-                7: "Stop watching your revenue dashboard. Start watching what PREDICTS it.\n\nHere's the mental model that changed how I run product:\n\nLagging indicators tell you what already happened:\n→ Revenue, churn, NPS\n\nLeading indicators tell you what's ABOUT to happen:\n→ Activation rate, time-to-value, support volume, feature adoption velocity\n\nReal example from last quarter:\nOur activation rate dropped 12% over 2 weeks. We caught it immediately. Root cause: onboarding flow broke after a deploy. Fixed in 48 hours.\n\nIf we'd waited for the churn metric to spike? That's a 30-day lag. Hundreds of lost users.\n\nMy framework:\n• For every KPI on your exec dashboard, identify 2-3 upstream signals\n• Set alerts on the leading indicators, not the lagging ones\n• Review weekly — are the leading indicators still predictive?\n\nThe PMs who see problems coming are the ones whose dashboards look forward, not backward.\n\nWhat leading indicators does your team track? Genuinely curious."
-            };
-            return modifications[index] || original + "\n\n[Updated based on feedback: " + feedback + "]";
-        }
-
-        function updateStats() {
-            const pending = contentData.filter(c => c.status === 'pending').length;
-            const scheduled = contentData.filter(c => c.status === 'scheduled').length;
-            const posted = contentData.filter(c => c.status === 'posted').length;
-            const statCards = document.querySelectorAll('.stat-card .value');
-            statCards[0].textContent = pending;
-            statCards[1].textContent = scheduled;
-            statCards[2].textContent = posted;
-        }
-        
-        function filterContent(status, btn) {
+        function filterContent(filter, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const rows = document.querySelectorAll('#contentTable tr');
-            rows.forEach(row => {
-                if (status === 'all' || row.dataset.status === status) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+            renderFeed(filter);
         }
-        function toggleView() {
-            const table = document.getElementById('tableView');
-            const calendar = document.getElementById('calendarView');
-            const toggle = document.getElementById('viewToggleText');
-            if (table.style.display === 'none') {
-                table.style.display = '';
-                calendar.classList.remove('active');
-                toggle.textContent = 'Calendar View';
-            } else {
-                table.style.display = 'none';
-                calendar.classList.add('active');
-                toggle.textContent = 'List View';
-            }
-        }
-        function renderTable() {
-            const rows = document.querySelectorAll('#contentTable tr');
-            rows.forEach((row, i) => {
-                const item = contentData[i];
-                const statusBadge = row.querySelector('.badge');
-                const statusMap = {
-                    'pending': ['badge-pending', 'Pending Approval'],
-                    'scheduled': ['badge-scheduled', 'Scheduled'],
-                    'posted': ['badge-posted', 'Posted']
-                };
-                statusBadge.className = 'badge ' + statusMap[item.status][0];
-                statusBadge.textContent = statusMap[item.status][1];
-                row.dataset.status = item.status;
 
-                const actionCell = row.querySelector('.actions');
-                if (item.status === 'pending') {
-                    actionCell.innerHTML = `<button class="btn btn-sm btn-primary" onclick="openPreview(${i})">Review</button>`;
-                } else {
-                    actionCell.innerHTML = `<button class="btn btn-sm btn-ghost" onclick="openPreview(${i})">View</button>`;
-                }
-            });
+        function switchView(view, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
         }
+
+        function approvePost(id) {
+            contentData[id].status = 'scheduled';
+            closeModal();
+            renderFeed();
+            showToast('Post approved and scheduled');
+        }
+
+        function rejectPost(id) {
+            contentData[id].status = 'draft';
+            closeModal();
+            renderFeed();
+            showToast('Post rejected — sent back for revision');
+        }
+
+        function regeneratePost(id) {
+            showToast('Regenerating content...');
+            setTimeout(() => {
+                closeModal();
+                showToast('New version generated');
+            }, 2000);
+        }
+
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
+
+        // Close modals on overlay click
+        document.getElementById('tweetModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUpload();
+        });
+
+        // Init
+        renderFeed();
     </script>
 </body>
 </html>
