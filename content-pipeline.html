@@ -816,6 +816,16 @@
                         <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
                     </div>
                 </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">X API Token</label>
+                    <div style="position:relative;">
+                        <input type="password" id="xTokenInput" placeholder="Enter your X API Bearer Token" style="width:100%; padding:10px 40px 10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none;">
+                        <button onclick="toggleTokenVisibility()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#71767b; cursor:pointer; font-size:16px;" id="tokenToggle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div style="font-size:12px; color:#71767b; margin-top:6px;">Required to post on your behalf. Your token is stored locally.</div>
+                </div>
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
                     <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
                     <button class="btn btn-primary" onclick="submitBrandMaterials()">Post</button>
@@ -1107,6 +1117,15 @@
 
         function closeUpload() {
             document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function toggleTokenVisibility() {
+            const input = document.getElementById('xTokenInput');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
         }
 
         function submitBrandMaterials() {
