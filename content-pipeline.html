@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Pipeline</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -699,23 +700,23 @@
         <div class="stats" style="display:none;">
             <div class="stat-card">
                 <div class="label">Pending Review</div>
-                <div class="value">4</div>
-                <div class="change">2 new today</div>
+                <div class="value" id="statPending">0</div>
+                <div class="change" id="statPendingChange"></div>
             </div>
             <div class="stat-card">
                 <div class="label">Scheduled</div>
-                <div class="value">12</div>
-                <div class="change">Next: Tomorrow 9am</div>
+                <div class="value" id="statScheduled">0</div>
+                <div class="change" id="statScheduledChange"></div>
             </div>
             <div class="stat-card">
-                <div class="label">Posted This Week</div>
-                <div class="value">8</div>
-                <div class="change">+23% vs last week</div>
+                <div class="label">Posted</div>
+                <div class="value" id="statPosted">0</div>
+                <div class="change" id="statPostedChange"></div>
             </div>
             <div class="stat-card">
                 <div class="label">Avg Engagement</div>
-                <div class="value">4.2%</div>
-                <div class="change">+0.8% vs last week</div>
+                <div class="value" id="statEngagement">0%</div>
+                <div class="change" id="statEngagementChange"></div>
             </div>
         </div>
 
@@ -836,7 +837,81 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // Supabase Client
+        const SUPABASE_URL = 'https://qiojxbwdzqktlpgilrbg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpb2p4YndkenFrdGxwZ2lscmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjczNDgsImV4cCI6MjA5NDYwMzM0OH0.3axCm5uxWYp0a8T0iyLw0Z-n-rzhubuqPe7BXM2dD7s';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let contentData = [];
+
+        // Fetch posts from Supabase
+        async function fetchPosts() {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .order('scheduled_for', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching posts:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // Transform Supabase rows to frontend format
+        function transformPosts(posts) {
+            return posts.map((post, idx) => ({
+                id: idx,
+                dbId: post.id,
+                title: post.title,
+                handle: '@tweetforme',
+                name: 'TweetForMe',
+                platform: post.platform || 'Twitter / X',
+                status: post.status,
+                scheduledFor: post.scheduled_for ? new Date(post.scheduled_for).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + new Date(post.scheduled_for).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Not scheduled',
+                content: post.content,
+                engagement: post.status === 'posted' ? {
+                    views: post.engagement_views || '0',
+                    likes: post.engagement_likes || '0',
+                    comments: post.engagement_comments || '0'
+                } : null,
+                avatar: 'TF'
+            }));
+        }
+
+        // Update stats from data
+        function updateStats(posts) {
+            const pending = posts.filter(p => p.status === 'pending').length;
+            const scheduled = posts.filter(p => p.status === 'scheduled').length;
+            const posted = posts.filter(p => p.status === 'posted').length;
+
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statScheduled').textContent = scheduled;
+            document.getElementById('statPosted').textContent = posted;
+            document.getElementById('statEngagement').textContent = posts.length > 0 ? calculateAvgEngagement(posts) : '0%';
+        }
+
+        function calculateAvgEngagement(posts) {
+            const postedPosts = posts.filter(p => p.status === 'posted' && p.engagement_likes);
+            if (postedPosts.length === 0) return '0%';
+            const totalLikes = postedPosts.reduce((sum, p) => sum + parseInt(p.engagement_likes || '0'), 0);
+            const totalViews = postedPosts.reduce((sum, p) => sum + parseInt(String(p.engagement_views || '0').replace(/[^0-9]/g, '')), 0);
+            if (totalViews === 0) return '0%';
+            return (totalLikes / totalViews * 100).toFixed(1) + '%';
+        }
+
+        // Initialize app - check Supabase for existing posts
+        async function initApp() {
+            const posts = await fetchPosts();
+            if (posts.length > 0) {
+                contentData = transformPosts(posts);
+                updateStats(posts);
+                renderFeed();
+            } else {
+                renderFeed(); // Shows empty state
+            }
+        }
+
         const sampleData = [
             {
                 id: 0,
@@ -1032,6 +1107,16 @@
                 .replace(/(@\w+)/g, '<span class="mention">$1</span>');
         }
 
+        function parseScheduleDate(dateStr) {
+            // Parse "May 19, 2026 · 9:00 AM" format
+            try {
+                const cleaned = dateStr.replace('·', '').replace(/\s+/g, ' ').trim();
+                return new Date(cleaned).toISOString();
+            } catch (e) {
+                return new Date().toISOString();
+            }
+        }
+
         function openPreview(id) {
             const item = contentData[id];
             const modal = document.getElementById('tweetModal');
@@ -1173,18 +1258,38 @@
                     currentStep++;
                     setTimeout(advanceStep, 1800);
                 } else {
-                    // Done - show the feed
-                    setTimeout(() => {
+                    // Done - insert posts into Supabase then show feed
+                    setTimeout(async () => {
                         loadingState.classList.remove('active');
-                        // Reset step states for next time
                         steps.forEach(s => {
                             document.getElementById(s).classList.remove('active', 'done');
                         });
                         document.getElementById(steps[0]).classList.add('active');
                         progressBar.style.width = '0%';
 
-                        // Load sample data into feed
-                        contentData = sampleData;
+                        // Insert sample posts into Supabase
+                        const postsToInsert = sampleData.map(item => ({
+                            title: item.title,
+                            content: item.content,
+                            platform: item.platform,
+                            status: item.status || 'pending',
+                            scheduled_for: item.scheduledFor ? parseScheduleDate(item.scheduledFor) : null,
+                            engagement_views: item.engagement ? item.engagement.views : null,
+                            engagement_likes: item.engagement ? item.engagement.likes : null,
+                            engagement_comments: item.engagement ? (item.engagement.comments || item.engagement.replies) : null
+                        }));
+
+                        const { data, error } = await supabase.from('posts').insert(postsToInsert).select();
+
+                        if (error) {
+                            console.error('Supabase insert error:', error);
+                            // Fallback to local sample data
+                            contentData = sampleData;
+                        } else {
+                            contentData = transformPosts(data);
+                            updateStats(data);
+                        }
+
                         renderFeed();
                         showToast('Content generated successfully!');
                     }, 800);
@@ -1205,14 +1310,22 @@
             btn.classList.add('active');
         }
 
-        function approvePost(id) {
+        async function approvePost(id) {
+            const post = contentData[id];
+            if (post.dbId) {
+                await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.dbId);
+            }
             contentData[id].status = 'scheduled';
             closeModal();
             renderFeed();
             showToast('Post approved and scheduled');
         }
 
-        function rejectPost(id) {
+        async function rejectPost(id) {
+            const post = contentData[id];
+            if (post.dbId) {
+                await supabase.from('posts').update({ status: 'rejected' }).eq('id', post.dbId);
+            }
             contentData[id].status = 'draft';
             closeModal();
             renderFeed();
@@ -1242,8 +1355,8 @@
             if (e.target === this) closeUpload();
         });
 
-        // Init
-        renderFeed();
+        // Init - try Supabase first, fallback to empty state
+        initApp();
     </script>
 </body>
 </html>
