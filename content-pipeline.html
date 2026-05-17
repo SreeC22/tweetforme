@@ -689,14 +689,14 @@
         <!-- Header -->
         <div class="header">
             <h1>Content Pipeline</h1>
-            <div class="header-actions">
+            <div class="header-actions" id="headerActions" style="display:none;">
                 <button class="btn btn-primary" onclick="openUpload()">Add Brand Materials</button>
             </div>
         </div>
 
 
         <!-- Stats -->
-        <div class="stats">
+        <div class="stats" style="display:none;">
             <div class="stat-card">
                 <div class="label">Pending Review</div>
                 <div class="value">4</div>
@@ -720,7 +720,7 @@
         </div>
 
         <!-- Filter Bar -->
-        <div class="filter-bar">
+        <div class="filter-bar" style="display:none;">
             <button class="filter-btn active" onclick="filterContent('all', this)">All</button>
             <button class="filter-btn" onclick="filterContent('pending', this)">Pending</button>
             <button class="filter-btn" onclick="filterContent('scheduled', this)">Scheduled</button>
@@ -937,12 +937,14 @@
                 feed.style.display = 'none';
                 document.querySelector('.stats').style.display = 'none';
                 document.querySelector('.filter-bar').style.display = 'none';
+                document.getElementById('headerActions').style.display = 'none';
                 return;
             } else {
                 emptyState.style.display = 'none';
                 feed.style.display = 'block';
                 document.querySelector('.stats').style.display = 'grid';
                 document.querySelector('.filter-bar').style.display = 'flex';
+                document.getElementById('headerActions').style.display = 'flex';
             }
 
             feed.innerHTML = filtered.map((item, idx) => {
