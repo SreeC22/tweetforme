@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { VoiceProfile } from "@/lib/types";
+import { isDemo, DEMO_PROFILE, DEMO_SAMPLES } from "@/lib/demo";
 
 const STORAGE_KEY = "echo:voice-profile";
 
@@ -28,6 +29,7 @@ export default function TrainFlow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -38,11 +40,27 @@ export default function TrainFlow() {
         /* ignore */
       }
     }
+    if (isDemo()) {
+      setDemo(true);
+      if (!cached) setRaw(DEMO_SAMPLES);
+    }
   }, []);
 
   // Core: send samples to the voice engine and save the profile.
   // Callers own loading/error so each mode reads naturally.
   async function runVoice(samples: string[], extraTone: string[] = []) {
+    if (demo) {
+      await new Promise((res) => setTimeout(res, 700));
+      const dp: VoiceProfile = {
+        ...DEMO_PROFILE,
+        tone: extraTone.length
+          ? Array.from(new Set([...DEMO_PROFILE.tone, ...extraTone]))
+          : DEMO_PROFILE.tone,
+      };
+      setProfile(dp);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dp));
+      return;
+    }
     const r = await fetch("/api/voice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

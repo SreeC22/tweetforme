@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Draft, Platform, VoiceProfile } from "@/lib/types";
+import { isDemo, DEMO_DRAFTS, DEMO_PROFILE } from "@/lib/demo";
 
 const STORAGE_KEY = "echo:voice-profile";
 const FEEDBACK_KEY = "echo:feedback-notes";
@@ -23,6 +24,7 @@ export default function GenerateFlow() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [tab, setTab] = useState<Platform>("x");
   const [feedbackNotes, setFeedbackNotes] = useState<string[]>([]);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -41,16 +43,26 @@ export default function GenerateFlow() {
         /* ignore */
       }
     }
+    if (isDemo()) {
+      setDemo(true);
+      setIdea((v) => v || "the myth of the overnight success");
+      if (!cached) setProfile(DEMO_PROFILE);
+    }
   }, []);
 
   async function generate() {
-    if (!profile) {
+    if (!profile && !demo) {
       setError("Train your voice first — head to /train.");
       return;
     }
     setLoading(true);
     setError(null);
     try {
+      if (demo) {
+        await new Promise((res) => setTimeout(res, 800));
+        setDrafts(DEMO_DRAFTS);
+        return;
+      }
       const r = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
