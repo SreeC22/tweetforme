@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Draft, Platform, VoiceProfile } from "@/lib/types";
-import { isDemo, DEMO_DRAFTS, DEMO_PROFILE } from "@/lib/demo";
+import { isDemo, isAutoplay, DEMO_DRAFTS, DEMO_PROFILE } from "@/lib/demo";
 
 const STORAGE_KEY = "echo:voice-profile";
 const FEEDBACK_KEY = "echo:feedback-notes";
@@ -24,7 +24,7 @@ export default function GenerateFlow() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [tab, setTab] = useState<Platform>("x");
   const [feedbackNotes, setFeedbackNotes] = useState<string[]>([]);
-  const [demo, setDemo] = useState(false);
+  const autoRan = useRef(false);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -44,21 +44,59 @@ export default function GenerateFlow() {
       }
     }
     if (isDemo()) {
-      setDemo(true);
-      setIdea((v) => v || "the myth of the overnight success");
+      if (!isAutoplay()) setIdea((v) => v || "the myth of the overnight success");
       if (!cached) setProfile(DEMO_PROFILE);
     }
   }, []);
 
+  // Autoplay: type an idea, generate, tour the platform tabs, then 👎 + regenerate.
+  useEffect(() => {
+    if (!isAutoplay() || autoRan.current) return;
+    autoRan.current = true;
+    let cancelled = false;
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    (async () => {
+      await sleep(900);
+      const ideaText = "the myth of the overnight success";
+      for (let i = 0; i <= ideaText.length; i++) {
+        if (cancelled) return;
+        setIdea(ideaText.slice(0, i));
+        await sleep(40);
+      }
+      if (cancelled) return;
+      await sleep(450);
+      await generate();
+      if (cancelled) return;
+      await sleep(1300);
+      setTab("threads");
+      await sleep(1500);
+      if (cancelled) return;
+      setTab("linkedin");
+      await sleep(1500);
+      if (cancelled) return;
+      setTab("x");
+      await sleep(900);
+      if (cancelled) return;
+      handleFeedback("down", "too formal");
+      await sleep(1100);
+      if (cancelled) return;
+      await generate();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function generate() {
-    if (!profile && !demo) {
+    if (!profile && !isDemo()) {
       setError("Train your voice first — head to /train.");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      if (demo) {
+      if (isDemo()) {
         await new Promise((res) => setTimeout(res, 800));
         setDrafts(DEMO_DRAFTS);
         return;

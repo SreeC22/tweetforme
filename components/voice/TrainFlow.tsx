@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { VoiceProfile } from "@/lib/types";
-import { isDemo, DEMO_PROFILE, DEMO_SAMPLES } from "@/lib/demo";
+import { useRouter } from "next/navigation";
+import { isDemo, isAutoplay, DEMO_PROFILE, DEMO_SAMPLES } from "@/lib/demo";
 
 const STORAGE_KEY = "echo:voice-profile";
 
@@ -29,7 +30,8 @@ export default function TrainFlow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
-  const [demo, setDemo] = useState(false);
+  const router = useRouter();
+  const autoRan = useRef(false);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -40,16 +42,41 @@ export default function TrainFlow() {
         /* ignore */
       }
     }
-    if (isDemo()) {
-      setDemo(true);
-      if (!cached) setRaw(DEMO_SAMPLES);
-    }
+    if (isDemo() && !isAutoplay() && !cached) setRaw(DEMO_SAMPLES);
+  }, []);
+
+  // Autoplay: type the samples, train, then advance to /generate. Hands-free.
+  useEffect(() => {
+    if (!isAutoplay() || autoRan.current) return;
+    autoRan.current = true;
+    let cancelled = false;
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    (async () => {
+      await sleep(800);
+      const text = DEMO_SAMPLES.split(/\n\s*\n+/).slice(0, 3).join("\n\n");
+      for (let i = 0; i <= text.length; i += 3) {
+        if (cancelled) return;
+        setRaw(text.slice(0, i));
+        await sleep(14);
+      }
+      if (cancelled) return;
+      await sleep(550);
+      await trainPaste();
+      if (cancelled) return;
+      await sleep(1800);
+      if (cancelled) return;
+      router.push("/generate?autoplay=1");
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Core: send samples to the voice engine and save the profile.
   // Callers own loading/error so each mode reads naturally.
   async function runVoice(samples: string[], extraTone: string[] = []) {
-    if (demo) {
+    if (isDemo()) {
       await new Promise((res) => setTimeout(res, 700));
       const dp: VoiceProfile = {
         ...DEMO_PROFILE,
@@ -96,6 +123,10 @@ export default function TrainFlow() {
     setLoading(true);
     setError(null);
     try {
+      if (isDemo()) {
+        await runVoice([]); // seeded — no real Threads token needed for the demo
+        return;
+      }
       const r = await fetch("/api/import/threads", { method: "POST" });
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error || "Threads import failed.");

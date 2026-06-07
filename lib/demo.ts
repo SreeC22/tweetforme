@@ -7,7 +7,15 @@ import type { Draft, VoiceProfile } from "@/lib/types";
 
 export function isDemo(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("demo") === "1";
+  const q = new URLSearchParams(window.location.search);
+  return q.get("demo") === "1" || q.get("autoplay") === "1";
+}
+
+// Autoplay = the self-running animated demo (types inputs, auto-advances across
+// pages). Implies demo seeding.
+export function isAutoplay(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("autoplay") === "1";
 }
 
 export const DEMO_SAMPLES = [
