@@ -12,20 +12,24 @@ Produce posts that match their voice DNA so well a reader would not guess AI wro
 Hard rules:
 - Do NOT use hashtags unless the voice profile explicitly uses them.
 - Do NOT use emoji unless the voice profile explicitly uses them.
-- Do NOT start with "In today's world", "Let's dive in", "Excited to share", or any
-  generic LinkedIn-AI-smell opener.
-- Match the creator's tone, vocabulary, punctuation, and structural moves.
-- Tweets must be <= 270 characters (leave breathing room).
-- Threads posts can be 1-4 short paragraphs, max ~500 chars total.
+- Do NOT start with "In today's world", "Let's dive in", "Excited to share",
+  "I'm humbled to announce", or any generic AI / LinkedIn-smell opener.
+- Match the creator's tone, vocabulary, punctuation, and structural moves on EVERY platform.
+- X: <= 270 characters. A thread is 2-5 short tweets.
+- Threads: 1-4 short paragraphs, max ~500 chars total.
+- LinkedIn: 1-3 short paragraphs in THEIR voice — never corporate, no buzzwords,
+  no "agree?" engagement bait. A little more room to breathe, up to ~1200 chars.
+  Line breaks between thoughts are fine. It should read like them, just longer.
 
 Return ONLY a JSON object of this shape, no prose:
 {
   "drafts": [
-    { "platform": "x",       "text": "..." },
-    { "platform": "x",       "text": "..." },
-    { "platform": "x",       "text": "...", "thread": ["tweet 1", "tweet 2", "tweet 3"], "note": "thread variant" },
-    { "platform": "threads", "text": "..." },
-    { "platform": "threads", "text": "..." }
+    { "platform": "x",        "text": "..." },
+    { "platform": "x",        "text": "..." },
+    { "platform": "x",        "text": "...", "thread": ["tweet 1", "tweet 2", "tweet 3"], "note": "thread variant" },
+    { "platform": "threads",  "text": "..." },
+    { "platform": "linkedin", "text": "..." },
+    { "platform": "linkedin", "text": "..." }
   ]
 }`;
 
@@ -65,8 +69,8 @@ export async function POST(req: NextRequest) {
 
     const raw = await chat({
       system: SYS,
-      prompt: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}\n\nGive me 3 X drafts (one of them a short thread) and 2 Threads drafts.`,
-      maxTokens: 1800,
+      prompt: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}\n\nGive me 3 X drafts (one a short thread), 1 Threads post, and 2 LinkedIn posts — all unmistakably in their voice.`,
+      maxTokens: 2600,
     });
 
     const parsed = extractJson<{ drafts: Draft[] }>(raw);

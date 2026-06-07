@@ -17,8 +17,8 @@ export default function GeneratePage() {
 
       <h1 className="font-display text-4xl sm:text-5xl">drop a raw idea.</h1>
       <p className="mt-3 max-w-xl text-ink-600">
-        We'll turn it into 3 X drafts and 2 Threads posts in your voice.
-        Hit publish, or open in compose to ship it manually.
+        We'll turn it into X, Threads, and LinkedIn drafts in your voice.
+        Publish to Threads & LinkedIn, or open in compose. (X publishing is coming soon.)
       </p>
 
       <div className="mt-8">

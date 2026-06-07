@@ -73,7 +73,7 @@ export default function GenerateFlow() {
           disabled={loading || !idea.trim() || !profile}
           className="rounded-full bg-ink-900 px-5 py-3 text-base font-medium text-white hover:bg-ink-800 disabled:opacity-50"
         >
-          {loading ? "writing in your voice…" : "generate 5 drafts"}
+          {loading ? "writing in your voice…" : "generate drafts"}
         </button>
         {drafts.length > 0 && (
           <button
@@ -109,17 +109,25 @@ function DraftCard({ draft }: { draft: Draft }) {
   const [posting, setPosting] = useState(false);
   const [postedUrl, setPostedUrl] = useState<string | null>(null);
 
-  const isX = draft.platform === "x";
-  const composeUrl = isX
-    ? `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`
-    : `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
+  const platform = draft.platform;
+  const LABELS: Record<string, string> = { x: "X", threads: "Threads", linkedin: "LinkedIn" };
+  const label = LABELS[platform] ?? platform;
+  const canPublish = platform === "threads" || platform === "linkedin";
+  const enc = encodeURIComponent(text);
+  const composeUrl =
+    platform === "x"
+      ? `https://x.com/intent/tweet?text=${enc}`
+      : platform === "threads"
+      ? `https://www.threads.net/intent/post?text=${enc}`
+      : `https://www.linkedin.com/feed/?shareActive=true&text=${enc}`;
 
   async function publish() {
     setPosting(true);
     setStatus(null);
     try {
-      const endpoint = isX ? "/api/post-x" : "/api/post-threads";
-      const body = isX && thread?.length ? { thread } : { text };
+      const endpoint =
+        platform === "threads" ? "/api/post-threads" : "/api/post-linkedin";
+      const body = { text };
       const r = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,10 +151,14 @@ function DraftCard({ draft }: { draft: Draft }) {
         <div className="flex items-center gap-2">
           <span
             className={`rounded-md px-2 py-0.5 text-[10px] font-semibold text-white ${
-              isX ? "bg-ink-900" : "bg-[#0a0a0a]"
+              platform === "x"
+                ? "bg-ink-900"
+                : platform === "linkedin"
+                ? "bg-[#0a66c2]"
+                : "bg-[#0a0a0a]"
             }`}
           >
-            {isX ? "X" : "Threads"}
+            {label}
           </span>
           {draft.note && <span className="text-ink-400">{draft.note}</span>}
           {thread?.length && (
@@ -188,13 +200,23 @@ function DraftCard({ draft }: { draft: Draft }) {
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button
-          onClick={publish}
-          disabled={posting}
-          className="rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 disabled:opacity-50"
-        >
-          {posting ? "publishing…" : `publish to ${isX ? "X" : "Threads"}`}
-        </button>
+        {canPublish ? (
+          <button
+            onClick={publish}
+            disabled={posting}
+            className="rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 disabled:opacity-50"
+          >
+            {posting ? "publishing…" : `publish to ${label}`}
+          </button>
+        ) : (
+          <button
+            disabled
+            title="X publishing is coming soon"
+            className="cursor-not-allowed rounded-full border border-ink-200 px-4 py-2 text-sm text-ink-400"
+          >
+            connect X · coming soon
+          </button>
+        )}
         <a
           href={composeUrl}
           target="_blank"
