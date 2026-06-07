@@ -1,0 +1,8 @@
+# Minimal Supabase CLI config. Link with:
+#   supabase link --project-ref qiojxbwdzqktlpgilrbg
+project_id = "qiojxbwdzqktlpgilrbg"
+
+# Edge Functions are invoked by:
+#  - the dashboard (anon key in the Authorization header) — JWT is valid, allowed
+#  - pg_cron (service-role key) — JWT is valid, allowed
+# So the default verify_jwt = true is fine for every function.

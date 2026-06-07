@@ -84,6 +84,33 @@ See `.env.example` for the full list. Only `WAITLIST_WEBHOOK_URL` is needed for 
 
 ---
 
+## Backend (the live content pipeline)
+
+The product backend runs **entirely on Supabase** — Postgres + Edge Functions +
+pg_cron. The dashboard (`content-pipeline.html`) reads/writes Supabase directly and
+calls Edge Functions for anything needing a secret.
+
+```
+supabase/
+├── migrations/        # posts, voice_profiles, accounts (+ RLS) and the cron jobs
+└── functions/
+    ├── _shared/       # claude, x, db, prompts, schedule, publish, cors
+    ├── analyze-voice/     # learn + persist a brand voice from sample posts
+    ├── generate-tweets/   # draft tweets in-voice, queue them as "pending"
+    ├── regenerate-tweet/  # rewrite one post, send back to review
+    ├── save-settings/     # store X token + posting schedule (server-side)
+    ├── publish-now/       # manual override: post an approved tweet now
+    └── publish-due/       # cron: auto-publish approved tweets at their time
+```
+
+**Flow:** add brand materials → voice learned → tweets generated → human approves
+→ auto-published at the scheduled time (only approved posts ever send).
+
+👉 **Setup + deploy:** [`docs/GOING_LIVE.md`](docs/GOING_LIVE.md)
+
+The repo also ships Claude Code agents in `.claude/agents/` (code-writer,
+code-reviewer, code-maintainer, supabase-engineer, voice-prompt-engineer).
+
 ## Deploy
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
