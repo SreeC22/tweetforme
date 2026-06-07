@@ -35,7 +35,11 @@ Return ONLY a JSON object of this shape, no prose:
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea, profile } = (await req.json()) as { idea: string; profile: VoiceProfile };
+    const { idea, profile, feedback } = (await req.json()) as {
+      idea: string;
+      profile: VoiceProfile;
+      feedback?: string[];
+    };
 
     if (!idea || !idea.trim()) {
       return NextResponse.json({ error: "Give us an idea to riff on." }, { status: 400 });
@@ -67,9 +71,14 @@ export async function POST(req: NextRequest) {
       .map((s, i) => `--- Sample ${i + 1} ---\n${s}`)
       .join("\n\n");
 
+    const fb = Array.isArray(feedback) ? feedback.filter(Boolean) : [];
+    const feedbackBlock = fb.length
+      ? `\n\nHONOR THIS FEEDBACK the user gave on earlier drafts (most important):\n${fb.map((f) => `- ${f}`).join("\n")}`
+      : "";
+
     const raw = await chat({
       system: SYS,
-      prompt: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}\n\nGive me 3 X drafts (one a short thread), 1 Threads post, and 2 LinkedIn posts — all unmistakably in their voice.`,
+      prompt: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}${feedbackBlock}\n\nGive me 3 X drafts (one a short thread), 1 Threads post, and 2 LinkedIn posts — all unmistakably in their voice.`,
       maxTokens: 2600,
     });
 

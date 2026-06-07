@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import type { Draft, Platform, VoiceProfile } from "@/lib/types";
 
 const STORAGE_KEY = "echo:voice-profile";
+const FEEDBACK_KEY = "echo:feedback-notes";
+
+// 👎 reasons → concrete instructions the model must honor next round.
+const REASONS = ["too formal", "not my voice", "too generic", "too long"] as const;
+const REASON_RULES: Record<string, string> = {
+  "too formal": "Don't sound formal or corporate — keep it casual and human.",
+  "not my voice": "Match my writing samples more closely — this didn't sound like me.",
+  "too generic": "Avoid generic, templated phrasing — be specific and original.",
+  "too long": "Keep it tighter and punchier.",
+};
 
 export default function GenerateFlow() {
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
@@ -12,12 +22,21 @@ export default function GenerateFlow() {
   const [error, setError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [tab, setTab] = useState<Platform>("x");
+  const [feedbackNotes, setFeedbackNotes] = useState<string[]>([]);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
     if (cached) {
       try {
         setProfile(JSON.parse(cached));
+      } catch {
+        /* ignore */
+      }
+    }
+    const fb = typeof window !== "undefined" ? localStorage.getItem(FEEDBACK_KEY) : null;
+    if (fb) {
+      try {
+        setFeedbackNotes(JSON.parse(fb));
       } catch {
         /* ignore */
       }
@@ -35,7 +54,7 @@ export default function GenerateFlow() {
       const r = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea, profile }),
+        body: JSON.stringify({ idea, profile, feedback: feedbackNotes }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error || "Generation failed.");
@@ -44,6 +63,25 @@ export default function GenerateFlow() {
       setError(err instanceof Error ? err.message : "Generation failed.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Feedback → it adapts. 👎 reasons become hard rules for the next generation
+  // and get saved into the voice profile's "don'ts" so the change persists.
+  function handleFeedback(vote: "up" | "down", reason?: string) {
+    if (vote === "down" && reason) {
+      const rule = REASON_RULES[reason] ?? `Avoid: ${reason}.`;
+      setFeedbackNotes((prev) => {
+        const next = Array.from(new Set([...prev, rule]));
+        localStorage.setItem(FEEDBACK_KEY, JSON.stringify(next));
+        return next;
+      });
+      if (profile) {
+        const donts = Array.from(new Set([...(profile.donts || []), rule]));
+        const updated = { ...profile, donts };
+        setProfile(updated);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
     }
   }
 
@@ -82,7 +120,9 @@ export default function GenerateFlow() {
             disabled={loading}
             className="rounded-full border border-ink-200 px-4 py-2 text-sm text-ink-600 hover:bg-ink-100"
           >
-            regenerate
+            {feedbackNotes.length
+              ? `regenerate · using ${feedbackNotes.length} note${feedbackNotes.length === 1 ? "" : "s"}`
+              : "regenerate"}
           </button>
         )}
       </div>
@@ -92,6 +132,11 @@ export default function GenerateFlow() {
       {drafts.length > 0 && (
         <section className="space-y-4">
           <h2 className="font-display text-2xl">your drafts</h2>
+          {feedbackNotes.length > 0 && (
+            <p className="text-sm text-ink-500">
+              Learning from your feedback ({feedbackNotes.length}) — hit regenerate to see it adapt.
+            </p>
+          )}
 
           {/* platform switcher — flip between X / Threads / LinkedIn */}
           <div className="flex w-fit gap-1 rounded-full border border-ink-200 bg-ink-50 p-1 text-sm">
@@ -124,7 +169,7 @@ export default function GenerateFlow() {
             {drafts
               .filter((d) => d.platform === tab)
               .map((d, i) => (
-                <DraftCard key={`${tab}-${i}`} draft={d} />
+                <DraftCard key={`${tab}-${i}`} draft={d} onFeedback={handleFeedback} />
               ))}
           </ul>
           {drafts.filter((d) => d.platform === tab).length === 0 && (
@@ -138,12 +183,20 @@ export default function GenerateFlow() {
   );
 }
 
-function DraftCard({ draft }: { draft: Draft }) {
+function DraftCard({
+  draft,
+  onFeedback,
+}: {
+  draft: Draft;
+  onFeedback: (vote: "up" | "down", reason?: string) => void;
+}) {
   const [text, setText] = useState(draft.text);
   const [thread, setThread] = useState<string[] | undefined>(draft.thread);
   const [status, setStatus] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [postedUrl, setPostedUrl] = useState<string | null>(null);
+  const [showReasons, setShowReasons] = useState(false);
+  const [fbGiven, setFbGiven] = useState<string | null>(null);
 
   const platform = draft.platform;
   const LABELS: Record<string, string> = { x: "X", threads: "Threads", linkedin: "LinkedIn" };
@@ -276,6 +329,47 @@ function DraftCard({ draft }: { draft: Draft }) {
               </a>
             )}
           </span>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink-100 pt-3 text-sm">
+        {fbGiven ? (
+          <span className="text-ink-500">thanks — i&apos;ll factor that in ✓</span>
+        ) : showReasons ? (
+          <>
+            <span className="text-ink-400">what&apos;s off?</span>
+            {REASONS.map((r) => (
+              <button
+                key={r}
+                onClick={() => {
+                  onFeedback("down", r);
+                  setFbGiven(r);
+                }}
+                className="rounded-full border border-ink-200 px-3 py-1 text-xs text-ink-600 hover:bg-ink-100"
+              >
+                {r}
+              </button>
+            ))}
+          </>
+        ) : (
+          <>
+            <span className="text-ink-400">sound like you?</span>
+            <button
+              onClick={() => {
+                onFeedback("up");
+                setFbGiven("up");
+              }}
+              className="rounded-full border border-ink-200 px-3 py-1 hover:bg-ink-100"
+            >
+              👍
+            </button>
+            <button
+              onClick={() => setShowReasons(true)}
+              className="rounded-full border border-ink-200 px-3 py-1 hover:bg-ink-100"
+            >
+              👎
+            </button>
+          </>
         )}
       </div>
     </li>
