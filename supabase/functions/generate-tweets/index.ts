@@ -12,7 +12,7 @@
 
 import { handlePreflight, json } from "../_shared/cors.ts";
 import { admin, currentAccount, type Account } from "../_shared/db.ts";
-import { claude, extractJson } from "../_shared/claude.ts";
+import { llm, extractJson } from "../_shared/llm.ts";
 import {
   ANALYSIS_SYSTEM,
   buildAnalysisPrompt,
@@ -78,7 +78,7 @@ async function ensureVoiceProfile(
 
   const handle = String(account.handle ?? body.handle ?? "creator").replace(/^@/, "");
   const block = samples.map((s, i) => `--- Post ${i + 1} ---\n${s}`).join("\n\n");
-  const raw = await claude(buildAnalysisPrompt(handle, block), {
+  const raw = await llm(buildAnalysisPrompt(handle, block), {
     system: ANALYSIS_SYSTEM,
     maxTokens: 1500,
   });
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
       material: (body.material as string) ?? account.brand_material,
       topics: voice.profile.topics,
     });
-    const raw = await claude(prompt, { system: sys, maxTokens: 2600 });
+    const raw = await llm(prompt, { system: sys, maxTokens: 2600 });
     const tweets = extractJson<GeneratedTweet[]>(raw);
 
     const rows = tweets.slice(0, count).map((t, i) => ({

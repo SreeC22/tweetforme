@@ -14,8 +14,9 @@ Supabase: Postgres + Edge Functions + pg_cron.
   `publish-now`, `publish-due`, `save-settings`. Shared code in
   `supabase/functions/_shared/`.
 - Migrations: `supabase/migrations/` (core schema + cron).
-- Secrets (set via `supabase secrets set`): `ANTHROPIC_API_KEY`, optionally
-  `X_BEARER_TOKEN`, optionally `CLAUDE_MODEL`. `SUPABASE_URL` and
+- Secrets (set via `supabase secrets set`): an LLM key — `GROQ_API_KEY` (free,
+  default) / `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` — plus optionally
+  `LLM_PROVIDER`, `LLM_MODEL`, `X_BEARER_TOKEN`. `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` are injected automatically into functions.
 
 ## Deno / Edge Function rules
@@ -48,7 +49,7 @@ Supabase: Postgres + Edge Functions + pg_cron.
 supabase link --project-ref qiojxbwdzqktlpgilrbg
 supabase db push
 supabase functions deploy <name>     # or: deploy (all)
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase secrets set GROQ_API_KEY=...   # free LLM key (default provider; or GEMINI/ANTHROPIC)
 ```
 Always end by stating exactly which of: migration / function deploy / secret /
 cron SQL the change requires. Do not commit or push unless asked.

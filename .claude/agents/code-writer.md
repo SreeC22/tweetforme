@@ -14,8 +14,9 @@ learns a creator's writing voice and auto-drafts + publishes tweets in it.
   `posts` must stay in sync with what `content-pipeline.html` reads/writes.
 - **Backend:** Supabase **Edge Functions** (Deno + TypeScript) under
   `supabase/functions/`. Shared code is in `supabase/functions/_shared/`
-  (`claude.ts`, `x.ts`, `db.ts`, `prompts.ts`, `schedule.ts`, `publish.ts`,
-  `cors.ts`). Reuse these — do not re-implement Claude/X/DB access.
+  (`llm.ts` provider switch, `claude.ts`, `x.ts`, `db.ts`, `prompts.ts`,
+  `schedule.ts`, `publish.ts`, `cors.ts`). Reuse these — call `llm()`; don't
+  re-implement LLM/X/DB access.
 - **Scheduling:** `pg_cron` + `pg_net` (`supabase/migrations/*_cron.sql`) call
   the functions on a timer.
 - **Frontend:** `content-pipeline.html` talks to Supabase with the **anon key**
@@ -24,7 +25,7 @@ learns a creator's writing voice and auto-drafts + publishes tweets in it.
   NOT the live path. Don't extend them unless asked.
 
 ## Hard rules
-- **Secrets never reach the browser.** Claude API key and X tokens live only in
+- **Secrets never reach the browser.** LLM API key(s) and X tokens live only in
   Edge Function env / the `accounts` table (no anon RLS). The anon-key frontend
   must never read `accounts.x_access_token`.
 - **The approval gate is sacred.** Only posts with `status='scheduled'` may be

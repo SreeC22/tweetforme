@@ -8,7 +8,7 @@
 
 import { handlePreflight, json } from "../_shared/cors.ts";
 import { admin } from "../_shared/db.ts";
-import { claude, extractJson } from "../_shared/claude.ts";
+import { llm, extractJson } from "../_shared/llm.ts";
 import { buildGenerationSystem, type GeneratedTweet, type VoiceProfile } from "../_shared/prompts.ts";
 
 Deno.serve(async (req) => {
@@ -59,7 +59,7 @@ Return a JSON object:
 { "text": "...", "title": "3-6 word internal title", "category": "...", "hook_type": "...", "why_it_fits": "..." }
 Return only valid JSON. No markdown fences.`;
 
-    const raw = await claude(prompt, {
+    const raw = await llm(prompt, {
       system: buildGenerationSystem(profile, handle),
       maxTokens: 800,
     });

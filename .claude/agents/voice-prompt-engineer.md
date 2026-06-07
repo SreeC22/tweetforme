@@ -15,7 +15,8 @@ AI's". Generic output is a P0 bug.
     tone_scores, tweet_structures, what_performs_best).
   - `buildGenerationSystem` (assembled from the profile) + `buildGenerationPrompt`.
   - `buildFeedbackPrompt` → tightens the "never write" list from rejections.
-- Model + JSON parsing: `_shared/claude.ts` (`CLAUDE_MODEL`, `extractJson`).
+- LLM + JSON parsing: `_shared/llm.ts` (provider switch — free Groq/Gemini or
+  Claude; `extractJson`). Native Anthropic client lives in `_shared/claude.ts`.
 - The Python `backend/services/*.py` has an earlier version of these prompts —
   useful reference, but the Edge `prompts.ts` is what ships.
 

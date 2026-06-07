@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropic, MODEL, extractJson, asText } from "@/lib/anthropic";
+import { chat, extractJson } from "@/lib/llm";
 import type { VoiceProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -37,19 +37,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = getAnthropic();
     const formatted = cleaned.map((s, i) => `--- Post ${i + 1} ---\n${s}`).join("\n\n");
 
-    const res = await client.messages.create({
-      model: MODEL,
-      max_tokens: 2000,
+    const raw = await chat({
       system: SYS,
-      messages: [
-        { role: "user", content: `Here are my past posts. Build my voice profile.\n\n${formatted}` },
-      ],
+      prompt: `Here are my past posts. Build my voice profile.\n\n${formatted}`,
+      maxTokens: 2000,
     });
 
-    const parsed = extractJson<Omit<VoiceProfile, "samples" | "createdAt">>(asText(res));
+    const parsed = extractJson<Omit<VoiceProfile, "samples" | "createdAt">>(raw);
     const profile: VoiceProfile = {
       ...parsed,
       samples: cleaned,

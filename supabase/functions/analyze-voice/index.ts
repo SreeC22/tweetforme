@@ -8,7 +8,7 @@
 
 import { handlePreflight, json } from "../_shared/cors.ts";
 import { admin } from "../_shared/db.ts";
-import { claude, extractJson } from "../_shared/claude.ts";
+import { llm, extractJson } from "../_shared/llm.ts";
 import { ANALYSIS_SYSTEM, buildAnalysisPrompt, type VoiceProfile } from "../_shared/prompts.ts";
 
 /** Accept either an explicit samples[] or a brand_material blob split on blank lines. */
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const handle = String(body.handle ?? "creator").replace(/^@/, "");
     const block = samples.map((s, i) => `--- Post ${i + 1} ---\n${s}`).join("\n\n");
 
-    const raw = await claude(buildAnalysisPrompt(handle, block), {
+    const raw = await llm(buildAnalysisPrompt(handle, block), {
       system: ANALYSIS_SYSTEM,
       maxTokens: 1500,
     });

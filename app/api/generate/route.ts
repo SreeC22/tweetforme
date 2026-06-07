@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropic, MODEL, extractJson, asText } from "@/lib/anthropic";
+import { chat, extractJson } from "@/lib/llm";
 import type { Draft, VoiceProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = getAnthropic();
     const profileBlock = JSON.stringify(
       {
         summary: profile.summary,
@@ -64,19 +63,13 @@ export async function POST(req: NextRequest) {
       .map((s, i) => `--- Sample ${i + 1} ---\n${s}`)
       .join("\n\n");
 
-    const res = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1800,
+    const raw = await chat({
       system: SYS,
-      messages: [
-        {
-          role: "user",
-          content: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}\n\nGive me 3 X drafts (one of them a short thread) and 2 Threads drafts.`,
-        },
-      ],
+      prompt: `VOICE PROFILE:\n${profileBlock}\n\nORIGINAL SAMPLES (for tone reference):\n${samplePosts}\n\nIDEA TO POST ABOUT:\n${idea.trim()}\n\nGive me 3 X drafts (one of them a short thread) and 2 Threads drafts.`,
+      maxTokens: 1800,
     });
 
-    const parsed = extractJson<{ drafts: Draft[] }>(asText(res));
+    const parsed = extractJson<{ drafts: Draft[] }>(raw);
     const drafts = parsed.drafts.map((d) => {
       if (d.platform === "x" && d.text && d.text.length > 280) {
         return { ...d, text: d.text.slice(0, 277) + "…" };

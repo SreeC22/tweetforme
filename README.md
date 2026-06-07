@@ -4,6 +4,10 @@
 
 Paste your past posts. We learn your voice. Then we draft and publish to **X** and **Threads** — without the AI smell.
 
+**See it work in one command (no deploy, no keys in code):** grab a free Groq key
+(https://console.groq.com/keys), then `GROQ_API_KEY=... deno run -A scripts/try-pipeline.ts`.
+It prints a real learned voice profile and real tweets — the same prompts the app uses.
+
 ---
 
 ## Tech Stack
@@ -13,7 +17,7 @@ Paste your past posts. We learn your voice. Then we draft and publish to **X** a
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
-| AI | Claude (Anthropic SDK) |
+| AI | Pluggable LLM — free Groq/Gemini by default, Claude optional |
 | Publishing | X API v2, Threads Graph API |
 | Hosting | Vercel |
 
@@ -32,8 +36,8 @@ Paste your past posts. We learn your voice. Then we draft and publish to **X** a
 │   │   └── page.tsx              # Draft generation + publish UI
 │   └── api/
 │       ├── waitlist/route.ts     # Email capture + webhook relay
-│       ├── voice/route.ts        # Voice profile extraction (Claude)
-│       ├── generate/route.ts     # Draft generation (Claude)
+│       ├── voice/route.ts        # Voice profile extraction (pluggable LLM)
+│       ├── generate/route.ts     # Draft generation (pluggable LLM)
 │       ├── post-x/route.ts       # Publish to X via API v2
 │       └── post-threads/route.ts # Publish to Threads via Graph API
 ├── components/

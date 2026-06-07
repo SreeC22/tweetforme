@@ -12,7 +12,7 @@ content-pipeline.html ──anon key──▶ Supabase Postgres (posts/voice_pro
                             │  analyze-voice, generate-tweets, regenerate-tweet,
                             │  save-settings, publish-now, publish-due
                             ▼
-                        Claude API  +  X API
+                        LLM (Groq/Gemini/Claude)  +  X API
         pg_cron ──daily──────▶ generate-tweets  (top up the queue)
         publishing is MANUAL — click "Publish to X" (publish-now); publish-due
         exists but is not scheduled by default
@@ -23,7 +23,7 @@ content-pipeline.html ──anon key──▶ Supabase Postgres (posts/voice_pro
 ## 0. Prereqs
 - Supabase project: `qiojxbwdzqktlpgilrbg` (already created).
 - The Supabase CLI: `npm i -g supabase` (or `brew install supabase/tap/supabase`).
-- An Anthropic API key. An X (Twitter) API token (see §5).
+- A free LLM key (Groq or Gemini) — or an Anthropic key for top quality. An X (Twitter) API token (see §5).
 
 ## 1. Link the project
 ```bash
@@ -42,12 +42,15 @@ This runs `supabase/migrations/*` → creates `accounts`, `voice_profiles`, `pos
 > into **SQL Editor** and run it.
 
 ## 3. Set the secrets (server-side only)
+The pipeline runs on any LLM. Default is **free** — a Groq key, no credit card
+(https://console.groq.com/keys). Switch to Gemini (also free) or Anthropic (top
+quality) with `LLM_PROVIDER`.
 ```bash
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase secrets set GROQ_API_KEY=...            # free; the default provider
+# supabase secrets set LLM_PROVIDER=gemini       # or gemini / anthropic / openai
+# supabase secrets set LLM_MODEL=...             # optional model override
 # Optional shared team X token (fallback when an account has none):
 supabase secrets set X_BEARER_TOKEN=...
-# Optional model override (defaults to claude-sonnet-4-6):
-supabase secrets set CLAUDE_MODEL=claude-sonnet-4-6
 ```
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically — don't set them.
 
@@ -156,7 +159,7 @@ Function, store per-account, and refresh on expiry. This replaces pasting tokens
 - [ ] **Supabase access** — invite the team in Supabase → *Organization → Team*
       (Settings → Members). Roles: Owner for admins, Developer for the rest.
 - [ ] **Schema applied** (`supabase db push`).
-- [ ] **Secrets set** (`ANTHROPIC_API_KEY`, X token).
+- [ ] **Secrets set** (`GROQ_API_KEY` or other LLM key, X token).
 - [ ] **Functions deployed** (all six).
 - [ ] **pg_cron enabled** and jobs scheduled.
 - [ ] **End-to-end test:** add materials → generate → approve → confirm a real
