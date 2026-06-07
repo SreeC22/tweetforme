@@ -89,3 +89,38 @@ export const DEMO_DRAFTS: Draft[] = [
     text: "I used to think I'd missed the window.\n\nThen I realized the people I admired didn't catch a window — they just kept shipping until one of a thousand attempts looked like luck from the outside.\n\nStop waiting to be discovered. Out-ship the wait.",
   },
 ];
+
+// A visibly more casual / punchier set — returned on regenerate (and after a
+// "too formal" 👎) so the demo shows the output actually changing & adapting.
+export const DEMO_DRAFTS_ADAPTED: Draft[] = [
+  {
+    platform: "x",
+    text: "nobody \"blew up overnight.\" they just shipped for six years while you weren't watching.",
+  },
+  {
+    platform: "x",
+    text: "overnight success = 1,000 boring days nobody filmed. that's the whole trick.",
+  },
+  {
+    platform: "x",
+    note: "thread variant",
+    text: "everyone wants overnight success. nobody wants the 1,000 days of shipping to crickets first.",
+    thread: [
+      "everyone wants overnight success. nobody wants the 1,000 days of shipping to crickets first.",
+      "yr 1: silence. yr 2: a trickle. yr 3: \"wow, overnight!\"",
+      "same work. late audience. keep going.",
+    ],
+  },
+  {
+    platform: "threads",
+    text: "overnight success is just compounding you couldn't see yet.\n\nshow up on the boring days. one of them becomes the story.",
+  },
+  {
+    platform: "linkedin",
+    text: "there's no such thing as overnight success.\n\njust 1,000 quiet days nobody saw — the flopped launches, the weekends spent building instead of posting about it.\n\nthe \"overnight\" is just the day people started watching. keep shipping.",
+  },
+  {
+    platform: "linkedin",
+    text: "thought i'd missed my shot.\n\nturns out nobody catches a \"window\" — they just out-ship the wait until one try looks like luck.\n\nstop waiting to be discovered.",
+  },
+];

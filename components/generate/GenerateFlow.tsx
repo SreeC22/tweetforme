@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Draft, Platform, VoiceProfile } from "@/lib/types";
-import { isDemo, isAutoplay, DEMO_DRAFTS, DEMO_PROFILE } from "@/lib/demo";
+import { isDemo, isAutoplay, DEMO_DRAFTS, DEMO_DRAFTS_ADAPTED, DEMO_PROFILE } from "@/lib/demo";
 
 const STORAGE_KEY = "echo:voice-profile";
 const FEEDBACK_KEY = "echo:feedback-notes";
@@ -25,6 +25,7 @@ export default function GenerateFlow() {
   const [tab, setTab] = useState<Platform>("x");
   const [feedbackNotes, setFeedbackNotes] = useState<string[]>([]);
   const autoRan = useRef(false);
+  const regenCount = useRef(0);
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -98,7 +99,11 @@ export default function GenerateFlow() {
     try {
       if (isDemo()) {
         await new Promise((res) => setTimeout(res, 800));
-        setDrafts(DEMO_DRAFTS);
+        regenCount.current += 1;
+        // After a 👎, show the adapted (more casual) set. Otherwise alternate so
+        // every regenerate visibly changes.
+        const adapt = feedbackNotes.length > 0 || regenCount.current % 2 === 0;
+        setDrafts(adapt ? DEMO_DRAFTS_ADAPTED : DEMO_DRAFTS);
         return;
       }
       const r = await fetch("/api/generate", {
