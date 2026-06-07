@@ -36,8 +36,9 @@ Supabase: Postgres + Edge Functions + pg_cron.
 - Service role (used inside Edge Functions) bypasses RLS; rely on that for writes.
 
 ## pg_cron / pg_net
-- `publish-due` runs every minute; `generate-tweets` daily. They're invoked via
-  `public.invoke_edge(fn, body)` which signs the call with the service-role key.
+- `generate-tweets` runs daily; **publishing is manual**, so `publish-due` is left
+  unscheduled (uncomment it in the cron migration for auto-publish). Jobs are
+  invoked via `public.invoke_edge(fn, body)`, signed with the service-role key.
 - Prefer Vault (`vault.create_secret`) for the URL + service key; the migration
   falls back to placeholders you must replace. Debug with `cron.job` and
   `cron.job_run_details`.

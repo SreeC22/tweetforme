@@ -1,11 +1,13 @@
 -- ============================================================================
 -- tweetforme / echo — orchestration cron
 -- ----------------------------------------------------------------------------
--- The scheduled half of the orchestration layer:
---   1. publish-due  — every minute, auto-publish APPROVED posts whose time has
---                     come (status='scheduled', hold=false, scheduled_for<=now).
---   2. generate-tweets — daily, top up the queue with fresh drafts per the
---                        account's posting schedule.
+-- The scheduled half of the orchestration layer. PUBLISHING IS MANUAL: a human
+-- clicks "Publish to X" on each approved post (the publish-now function). So we
+-- only schedule generation here. Auto-publish (publish-due) is intentionally left
+-- OFF — it's unscheduled below, and provided commented-out if you ever want it.
+--
+--   generate-tweets — daily, top up the queue with fresh drafts per the
+--                     account's posting schedule.
 --
 -- These call the Edge Functions over HTTP via pg_net.
 --
@@ -75,12 +77,15 @@ begin
 exception when others then null;
 end $$;
 
--- Auto-publish approved + due posts, every minute.
-select cron.schedule(
-  'publish-due-every-minute',
-  '* * * * *',
-  $$ select public.invoke_edge('publish-due'); $$
-);
+-- Publishing is MANUAL — publish-due stays UNSCHEDULED (see the unschedule block
+-- above, which also turns it off if it was on). To switch to auto-publish later,
+-- uncomment this one job:
+--
+-- select cron.schedule(
+--   'publish-due-every-minute',
+--   '* * * * *',
+--   $$ select public.invoke_edge('publish-due'); $$
+-- );
 
 -- Top up drafts once a day at 13:00 UTC. The function only generates as many as
 -- the schedule needs, so running daily is safe and cheap.

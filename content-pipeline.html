@@ -1175,18 +1175,15 @@
                 </div>
             ` : '';
 
-            // Approved posts auto-publish at their scheduled time. Offer manual
-            // overrides: post right now, or pause/resume without un-approving.
+            // Approved posts are ready to publish. Publishing is MANUAL — a human
+            // clicks Publish to X (publish-now stays gated on approval).
             const scheduledActions = item.status === 'scheduled' ? `
                 <div class="review-section">
                     <div class="review-status-bar">
-                        <span class="status-text"><span class="status-label">Approved</span> — ${item.hold ? 'Paused (won\'t auto-post)' : 'Auto-posts at its scheduled time'}</span>
+                        <span class="status-text"><span class="status-label">Approved</span> — ready to publish</span>
                     </div>
                     <div class="review-actions">
-                        <button class="btn btn-approve" onclick="postNow(${id})">Post now</button>
-                        ${item.hold
-                            ? `<button class="btn btn-regen" onclick="toggleHold(${id}, false)">Resume</button>`
-                            : `<button class="btn btn-reject" onclick="toggleHold(${id}, true)">Pause</button>`}
+                        <button class="btn btn-approve" onclick="postNow(${id})">Publish to X</button>
                         <button class="btn btn-regen" onclick="regeneratePost(${id})">Regenerate</button>
                     </div>
                 </div>
@@ -1371,7 +1368,7 @@
                 }
                 closeModal();
                 await initApp();
-                showToast('Approved — will auto-post at its scheduled time');
+                showToast('Approved — ready to publish');
             } catch (e) {
                 showToast('Could not approve: ' + (e.message || e));
             }
@@ -1426,20 +1423,6 @@
             }
         }
 
-        // Manual override: pause/resume an approved tweet without un-approving it.
-        async function toggleHold(id, hold) {
-            const post = contentData[id];
-            if (!post.dbId) return;
-            try {
-                const { error } = await supabase.from('posts').update({ hold: hold }).eq('id', post.dbId);
-                if (error) throw error;
-                closeModal();
-                await initApp();
-                showToast(hold ? "Paused — won't auto-post until resumed" : 'Resumed');
-            } catch (e) {
-                showToast('Could not update: ' + (e.message || e));
-            }
-        }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');

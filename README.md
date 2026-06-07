@@ -99,12 +99,12 @@ supabase/
     ├── generate-tweets/   # draft tweets in-voice, queue them as "pending"
     ├── regenerate-tweet/  # rewrite one post, send back to review
     ├── save-settings/     # store X token + posting schedule (server-side)
-    ├── publish-now/       # manual override: post an approved tweet now
-    └── publish-due/       # cron: auto-publish approved tweets at their time
+    ├── publish-now/       # publish an approved tweet to X (manual)
+    └── publish-due/       # optional auto-publish (not scheduled by default)
 ```
 
 **Flow:** add brand materials → voice learned → tweets generated → human approves
-→ auto-published at the scheduled time (only approved posts ever send).
+→ click **Publish to X** (only approved posts can be sent).
 
 👉 **Setup + deploy:** [`docs/GOING_LIVE.md`](docs/GOING_LIVE.md)
 

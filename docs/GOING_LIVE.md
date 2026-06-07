@@ -13,8 +13,9 @@ content-pipeline.html ──anon key──▶ Supabase Postgres (posts/voice_pro
                             │  save-settings, publish-now, publish-due
                             ▼
                         Claude API  +  X API
-        pg_cron ──every min──▶ publish-due      (auto-post approved + due)
         pg_cron ──daily──────▶ generate-tweets  (top up the queue)
+        publishing is MANUAL — click "Publish to X" (publish-now); publish-due
+        exists but is not scheduled by default
 ```
 
 ---
@@ -79,7 +80,9 @@ curl -s -X POST https://qiojxbwdzqktlpgilrbg.supabase.co/functions/v1/generate-t
 3. Run the file in **SQL Editor**.
 4. Verify: `select * from cron.job;` and later `select * from cron.job_run_details order by start_time desc limit 10;`
 
-`publish-due` then runs every minute; `generate-tweets` runs daily at 13:00 UTC.
+Only `generate-tweets` is scheduled (daily at 13:00 UTC). `publish-due` stays
+**unscheduled** — publishing is manual. Uncomment the publish-due job in the cron
+migration if you later want auto-publish.
 
 ## 6. Point the dashboard at it
 `content-pipeline.html` already has the project URL + anon key. Host it anywhere
@@ -93,20 +96,20 @@ an X token → it learns the voice, generates drafts, and fills the feed.
 
 **Status lifecycle**
 ```
-pending ──approve──▶ scheduled ──(auto @ scheduled_for | Post now)──▶ posted
-   │                     │
-   └──reject──▶ rejected └──Pause──▶ scheduled+hold (won't auto-post)
+pending ──approve──▶ scheduled ──(click "Publish to X")──▶ posted
+   │              (approved = ready to publish; nothing sends until you click)
+   └──reject──▶ rejected
    └──regenerate──▶ pending (fresh text, re-review)
 ```
 
-**The approval gate.** A post is sent **only** when `status='scheduled'` and
-`hold=false`. `publish-due` (cron) and `publish-now` (manual) both go through
-`_shared/publish.ts`, which is the single place anything becomes a live tweet.
-Nothing un-approved can ever post.
+**The approval gate.** A post is sent **only** when `status='scheduled'` (a human
+approved it). The `publish-now` function — invoked by the **Publish to X** button —
+goes through `_shared/publish.ts`, the single place anything becomes a live tweet,
+and refuses anything not approved. Nothing un-approved can ever post.
 
-**Auto-publish + manual override.** Approved posts auto-publish at `scheduled_for`.
-In the post's modal you can also **Post now** (send immediately) or **Pause/Resume**
-(hold without un-approving).
+**Manual publish.** Approved posts wait as `scheduled` (ready to publish). You send
+each one yourself with **Publish to X** in the post's modal — nothing auto-fires.
+(To switch to auto-publish at `scheduled_for`, uncomment the publish-due cron job.)
 
 **Failures.** A failed publish stays `scheduled` and retries up to 3 times, then
 flips to `failed` with the error recorded in `posts.error`.
