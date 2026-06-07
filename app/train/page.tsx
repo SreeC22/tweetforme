@@ -17,9 +17,9 @@ export default function TrainPage() {
 
       <h1 className="font-display text-4xl sm:text-5xl">teach it your voice.</h1>
       <p className="mt-3 max-w-xl text-ink-600">
-        Paste 10–20 of your past tweets or Threads posts. We'll extract your
-        tone, vocabulary, sentence shapes, and signature moves. Stored
-        locally in your browser — yours to export anytime.
+        Three ways in: paste anything you&apos;ve written, connect Threads, or — if
+        you don&apos;t post much — answer 4 quick prompts. We learn your tone,
+        vocabulary, and signature moves. Stored locally in your browser.
       </p>
 
       <div className="mt-8">
