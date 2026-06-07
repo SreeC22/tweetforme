@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Draft, VoiceProfile } from "@/lib/types";
+import type { Draft, Platform, VoiceProfile } from "@/lib/types";
 
 const STORAGE_KEY = "echo:voice-profile";
 
@@ -11,6 +11,7 @@ export default function GenerateFlow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [tab, setTab] = useState<Platform>("x");
 
   useEffect(() => {
     const cached = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -91,11 +92,46 @@ export default function GenerateFlow() {
       {drafts.length > 0 && (
         <section className="space-y-4">
           <h2 className="font-display text-2xl">your drafts</h2>
+
+          {/* platform switcher — flip between X / Threads / LinkedIn */}
+          <div className="flex w-fit gap-1 rounded-full border border-ink-200 bg-ink-50 p-1 text-sm">
+            {(["x", "threads", "linkedin"] as Platform[]).map((p) => {
+              const n = drafts.filter((d) => d.platform === p).length;
+              const labels: Record<Platform, string> = {
+                x: "X",
+                threads: "Threads",
+                linkedin: "LinkedIn",
+              };
+              const active = tab === p;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setTab(p)}
+                  className={`rounded-full px-4 py-1.5 transition ${
+                    active ? "bg-ink-900 text-white" : "text-ink-600 hover:text-ink-900"
+                  }`}
+                >
+                  {labels[p]}
+                  {n > 0 && (
+                    <span className={active ? "text-white/70" : "text-ink-400"}> ({n})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
           <ul className="space-y-4">
-            {drafts.map((d, i) => (
-              <DraftCard key={i} draft={d} />
-            ))}
+            {drafts
+              .filter((d) => d.platform === tab)
+              .map((d, i) => (
+                <DraftCard key={`${tab}-${i}`} draft={d} />
+              ))}
           </ul>
+          {drafts.filter((d) => d.platform === tab).length === 0 && (
+            <p className="text-sm text-ink-500">
+              No {tab} drafts this round — hit regenerate.
+            </p>
+          )}
         </section>
       )}
     </div>
