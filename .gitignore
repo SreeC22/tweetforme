@@ -9,4 +9,6 @@ out/
 .vercel
 next-env.d.ts
 tsconfig.tsbuildinfo
-.claude/
+# Ignore local Claude settings, but track the shared team agents.
+.claude/*
+!.claude/agents/

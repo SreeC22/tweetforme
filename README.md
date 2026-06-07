@@ -4,6 +4,10 @@
 
 Paste your past posts. We learn your voice. Then we draft and publish to **X** and **Threads** — without the AI smell.
 
+**See it work in one command (no deploy, no keys in code):** grab a free Groq key
+(https://console.groq.com/keys), then `GROQ_API_KEY=... deno run -A scripts/try-pipeline.ts`.
+It prints a real learned voice profile and real tweets — the same prompts the app uses.
+
 ---
 
 ## Tech Stack
@@ -13,7 +17,7 @@ Paste your past posts. We learn your voice. Then we draft and publish to **X** a
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
-| AI | Claude (Anthropic SDK) |
+| AI | Pluggable LLM — free Groq/Gemini by default, Claude optional |
 | Publishing | X API v2, Threads Graph API |
 | Hosting | Vercel |
 
@@ -32,8 +36,8 @@ Paste your past posts. We learn your voice. Then we draft and publish to **X** a
 │   │   └── page.tsx              # Draft generation + publish UI
 │   └── api/
 │       ├── waitlist/route.ts     # Email capture + webhook relay
-│       ├── voice/route.ts        # Voice profile extraction (Claude)
-│       ├── generate/route.ts     # Draft generation (Claude)
+│       ├── voice/route.ts        # Voice profile extraction (pluggable LLM)
+│       ├── generate/route.ts     # Draft generation (pluggable LLM)
 │       ├── post-x/route.ts       # Publish to X via API v2
 │       └── post-threads/route.ts # Publish to Threads via Graph API
 ├── components/
@@ -83,6 +87,33 @@ See `.env.example` for the full list. Only `WAITLIST_WEBHOOK_URL` is needed for 
 3. **One-Tap Publish** — Post directly via X API v2 and Threads Graph API, or open in the platform's native composer.
 
 ---
+
+## Backend (the live content pipeline)
+
+The product backend runs **entirely on Supabase** — Postgres + Edge Functions +
+pg_cron. The dashboard (`content-pipeline.html`) reads/writes Supabase directly and
+calls Edge Functions for anything needing a secret.
+
+```
+supabase/
+├── migrations/        # posts, voice_profiles, accounts (+ RLS) and the cron jobs
+└── functions/
+    ├── _shared/       # claude, x, db, prompts, schedule, publish, cors
+    ├── analyze-voice/     # learn + persist a brand voice from sample posts
+    ├── generate-tweets/   # draft tweets in-voice, queue them as "pending"
+    ├── regenerate-tweet/  # rewrite one post, send back to review
+    ├── save-settings/     # store X token + posting schedule (server-side)
+    ├── publish-now/       # publish an approved tweet to X (manual)
+    └── publish-due/       # optional auto-publish (not scheduled by default)
+```
+
+**Flow:** add brand materials → voice learned → tweets generated → human approves
+→ click **Publish to X** (only approved posts can be sent).
+
+👉 **Setup + deploy:** [`docs/GOING_LIVE.md`](docs/GOING_LIVE.md)
+
+The repo also ships Claude Code agents in `.claude/agents/` (code-writer,
+code-reviewer, code-maintainer, supabase-engineer, voice-prompt-engineer).
 
 ## Deploy
 

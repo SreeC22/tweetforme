@@ -51,5 +51,5 @@ curl -X POST http://localhost:8000/generate/ \
 
 | Variable | Where to get it |
 |----------|----------------|
-| `ANTHROPIC_API_KEY` | console.anthropic.com |
+| `GROQ_API_KEY` (free) | console.groq.com/keys — or `GEMINI_API_KEY`; `ANTHROPIC_API_KEY` for Claude |
 | `TWITTER_BEARER_TOKEN` | developer.twitter.com → your app → Keys & Tokens |

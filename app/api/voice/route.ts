@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropic, MODEL, extractJson, asText } from "@/lib/anthropic";
+import { chat, extractJson } from "@/lib/llm";
 import type { VoiceProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const SYS = `You are a brand-voice analyst for creators on X (Twitter) and Threads.
-You will receive 5-20 of the creator's past posts.
-Your job: distill their **voice DNA** — what makes their writing recognizably theirs.
+const SYS = `You are a voice analyst. You receive writing samples from ONE person.
+These may be social posts — but also notes, emails, blog snippets, messages, or
+short answers to onboarding questions. Distill their **voice DNA** from whatever
+you're given.
+
+Separate WHAT makes their voice (word choice, rhythm, humor, opinions, sentence
+shapes) from the FORMAT they happened to write in. The voice will be used to write
+short social posts later, so don't lock it to essays, emails, or Q&A formatting.
 
 Be specific. Avoid generic words like "engaging" or "authentic". Name actual patterns,
 phrases, sentence shapes, opinions, mannerisms. If the writer uses lowercase, says
@@ -30,26 +35,22 @@ export async function POST(req: NextRequest) {
     const { samples } = (await req.json()) as { samples: string[] };
     const cleaned = (samples || []).map((s) => (s || "").trim()).filter(Boolean);
 
-    if (cleaned.length < 3) {
+    if (!cleaned.length || cleaned.join(" ").length < 80) {
       return NextResponse.json(
-        { error: "Paste at least 3 of your past posts so we have something to work with." },
+        { error: "Give us a bit more to work with — paste some writing, or answer the starter prompts." },
         { status: 400 }
       );
     }
 
-    const client = getAnthropic();
     const formatted = cleaned.map((s, i) => `--- Post ${i + 1} ---\n${s}`).join("\n\n");
 
-    const res = await client.messages.create({
-      model: MODEL,
-      max_tokens: 2000,
+    const raw = await chat({
       system: SYS,
-      messages: [
-        { role: "user", content: `Here are my past posts. Build my voice profile.\n\n${formatted}` },
-      ],
+      prompt: `Here are my past posts. Build my voice profile.\n\n${formatted}`,
+      maxTokens: 2000,
     });
 
-    const parsed = extractJson<Omit<VoiceProfile, "samples" | "createdAt">>(asText(res));
+    const parsed = extractJson<Omit<VoiceProfile, "samples" | "createdAt">>(raw);
     const profile: VoiceProfile = {
       ...parsed,
       samples: cleaned,

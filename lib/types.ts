@@ -11,7 +11,7 @@ export type VoiceProfile = {
   createdAt: string;
 };
 
-export type Platform = "x" | "threads";
+export type Platform = "x" | "threads" | "linkedin";
 
 export type Draft = {
   platform: Platform;

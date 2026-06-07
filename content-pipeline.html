@@ -799,8 +799,8 @@
             <div style="padding: 20px;">
                 <div style="margin-bottom: 16px;">
                     <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Content</label>
-                    <textarea class="feedback-input" placeholder="What's happening?" style="min-height:120px;"></textarea>
-                    <div style="font-size:12px; color:#71767b; text-align:right; margin-top:4px;">0 / 280</div>
+                    <textarea id="brandMaterialInput" class="feedback-input" placeholder="Paste 5–20 of your best past posts, separated by a blank line.&#10;&#10;The more real examples you give, the more the drafts will sound like you (not like AI)." style="min-height:120px;"></textarea>
+                    <div style="font-size:12px; color:#71767b; margin-top:4px;">We learn your writing voice from these — more is better.</div>
                 </div>
                 <div style="margin-bottom: 16px;">
                     <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Platform</label>
@@ -811,9 +811,9 @@
                 <div style="margin-bottom: 16px;">
                     <label style="display:block; font-size:13px; color:#71767b; margin-bottom:6px;">Posting Frequency</label>
                     <div style="display:flex; gap:8px; align-items:center;">
-                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="">Times</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select>
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;" id="freqCount"><option value="">Times</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option><option value="60">60</option><option value="61">61</option><option value="62">62</option><option value="63">63</option><option value="64">64</option><option value="65">65</option><option value="66">66</option><option value="67">67</option><option value="68">68</option><option value="69">69</option><option value="70">70</option><option value="71">71</option><option value="72">72</option><option value="73">73</option><option value="74">74</option><option value="75">75</option><option value="76">76</option><option value="77">77</option><option value="78">78</option><option value="79">79</option><option value="80">80</option><option value="81">81</option><option value="82">82</option><option value="83">83</option><option value="84">84</option><option value="85">85</option><option value="86">86</option><option value="87">87</option><option value="88">88</option><option value="89">89</option><option value="90">90</option><option value="91">91</option><option value="92">92</option><option value="93">93</option><option value="94">94</option><option value="95">95</option><option value="96">96</option><option value="97">97</option><option value="98">98</option><option value="99">99</option><option value="100">100</option></select>
                         <span style="color:#71767b; font-size:14px;">times per</span>
-                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
+                        <select style="padding:10px 14px; border:1px solid #2f3336; border-radius:12px; background:#000; color:#e7e9ea; font-size:14px; outline:none; flex:1; appearance:auto;" id="freqPeriod"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
                     </div>
                 </div>
                 <div style="margin-bottom: 16px;">
@@ -842,6 +842,25 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpb2p4YndkenFrdGxwZ2lscmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjczNDgsImV4cCI6MjA5NDYwMzM0OH0.3axCm5uxWYp0a8T0iyLw0Z-n-rzhubuqPe7BXM2dD7s';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Call a Supabase Edge Function (the backend). The anon key is a valid
+        // JWT, so the functions accept it; secrets (Claude key, X token) live
+        // server-side and are never exposed here.
+        const FUNCTIONS_BASE = SUPABASE_URL + '/functions/v1';
+        async function invokeFn(name, body) {
+            const res = await fetch(`${FUNCTIONS_BASE}/${name}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                },
+                body: JSON.stringify(body || {}),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `${name} failed (${res.status})`);
+            return data;
+        }
+
         let contentData = [];
 
         // Fetch posts from Supabase
@@ -868,6 +887,7 @@
                 name: 'TweetForMe',
                 platform: post.platform || 'Twitter / X',
                 status: post.status,
+                hold: post.hold || false,
                 scheduledFor: post.scheduled_for ? new Date(post.scheduled_for).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + new Date(post.scheduled_for).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Not scheduled',
                 content: post.content,
                 engagement: post.status === 'posted' ? {
@@ -1155,6 +1175,20 @@
                 </div>
             ` : '';
 
+            // Approved posts are ready to publish. Publishing is MANUAL — a human
+            // clicks Publish to X (publish-now stays gated on approval).
+            const scheduledActions = item.status === 'scheduled' ? `
+                <div class="review-section">
+                    <div class="review-status-bar">
+                        <span class="status-text"><span class="status-label">Approved</span> — ready to publish</span>
+                    </div>
+                    <div class="review-actions">
+                        <button class="btn btn-approve" onclick="postNow(${id})">Publish to X</button>
+                        <button class="btn btn-regen" onclick="regeneratePost(${id})">Regenerate</button>
+                    </div>
+                </div>
+            ` : '';
+
             content.innerHTML = `
                 <div class="full-tweet">
                     <div class="full-tweet-header">
@@ -1186,6 +1220,7 @@
                     </div>
                 </div>
                 ${reviewSection}
+                ${scheduledActions}
             `;
 
             modal.classList.add('active');
@@ -1220,17 +1255,31 @@
             });
         });
 
-        function submitBrandMaterials() {
+        async function submitBrandMaterials() {
             const token = document.getElementById('xTokenInput').value.trim();
+            const brandMaterial = (document.getElementById('brandMaterialInput')?.value || '').trim();
+            const freqCount = parseInt(document.getElementById('freqCount')?.value, 10) || 5;
+            const freqPeriod = document.getElementById('freqPeriod')?.value || 'week';
+            const accountId = localStorage.getItem('account_id');
+
             if (!token) {
-                document.getElementById('xTokenInput').style.borderColor = '#f4212e';
-                document.getElementById('xTokenInput').setAttribute('placeholder', 'Token is required');
-                document.getElementById('xTokenInput').focus();
+                const el = document.getElementById('xTokenInput');
+                el.style.borderColor = '#f4212e';
+                el.setAttribute('placeholder', 'Token is required');
+                el.focus();
                 return;
             }
-            // Store token locally
+            // First-time setup needs brand material so we can learn the voice.
+            if (!accountId && !brandMaterial) {
+                const el = document.getElementById('brandMaterialInput');
+                if (el) { el.style.borderColor = '#f4212e'; el.focus(); }
+                showToast('Add a few of your past posts so we can learn your voice.');
+                return;
+            }
+
             localStorage.setItem('x_api_token', token);
             closeUpload();
+
             // Hide empty state, show loading
             document.getElementById('emptyState').style.display = 'none';
             document.querySelector('.stats').style.display = 'none';
@@ -1243,9 +1292,32 @@
             const steps = ['step1', 'step2', 'step3', 'step4'];
             const progressBar = document.getElementById('progressBar');
             let currentStep = 0;
-
-            // Animate progress bar
             progressBar.style.width = '10%';
+
+            // Kick off the REAL backend work in parallel with the animation:
+            //   save-settings (store token + schedule) → generate-tweets (Claude).
+            const work = (async () => {
+                const settings = await invokeFn('save-settings', {
+                    account_id: accountId || undefined,
+                    x_access_token: token,
+                    brand_material: brandMaterial || undefined,
+                    posts_per_period: freqCount,
+                    period: freqPeriod,
+                });
+                localStorage.setItem('account_id', settings.account_id);
+                return invokeFn('generate-tweets', {
+                    account_id: settings.account_id,
+                    brand_material: brandMaterial || undefined,
+                    source: 'dashboard',
+                });
+            })();
+
+            function resetSteps() {
+                loadingState.classList.remove('active');
+                steps.forEach(s => document.getElementById(s).classList.remove('active', 'done'));
+                document.getElementById(steps[0]).classList.add('active');
+                progressBar.style.width = '0%';
+            }
 
             function advanceStep() {
                 if (currentStep > 0) {
@@ -1258,41 +1330,16 @@
                     currentStep++;
                     setTimeout(advanceStep, 1800);
                 } else {
-                    // Done - insert posts into Supabase then show feed
-                    setTimeout(async () => {
-                        loadingState.classList.remove('active');
-                        steps.forEach(s => {
-                            document.getElementById(s).classList.remove('active', 'done');
-                        });
-                        document.getElementById(steps[0]).classList.add('active');
-                        progressBar.style.width = '0%';
-
-                        // Insert sample posts into Supabase
-                        const postsToInsert = sampleData.map(item => ({
-                            title: item.title,
-                            content: item.content,
-                            platform: item.platform,
-                            status: item.status || 'pending',
-                            scheduled_for: item.scheduledFor ? parseScheduleDate(item.scheduledFor) : null,
-                            engagement_views: item.engagement ? item.engagement.views : null,
-                            engagement_likes: item.engagement ? item.engagement.likes : null,
-                            engagement_comments: item.engagement ? (item.engagement.comments || item.engagement.replies) : null
-                        }));
-
-                        const { data, error } = await supabase.from('posts').insert(postsToInsert).select();
-
-                        if (error) {
-                            console.error('Supabase insert error:', error);
-                            // Fallback to local sample data
-                            contentData = sampleData;
-                        } else {
-                            contentData = transformPosts(data);
-                            updateStats(data);
-                        }
-
+                    // Animation finished — wait for the real generation, then load it.
+                    work.then(async () => {
+                        resetSteps();
+                        await initApp();
+                        showToast('Content generated in your voice ✓');
+                    }).catch((err) => {
+                        resetSteps();
                         renderFeed();
-                        showToast('Content generated successfully!');
-                    }, 800);
+                        showToast('Generation failed: ' + err.message);
+                    });
                 }
             }
 
@@ -1310,35 +1357,72 @@
             btn.classList.add('active');
         }
 
+        // Approve → status 'scheduled'. The publisher only ever sends approved
+        // posts, so this is the gate before anything goes live.
         async function approvePost(id) {
             const post = contentData[id];
-            if (post.dbId) {
-                await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.dbId);
+            try {
+                if (post.dbId) {
+                    const { error } = await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.dbId);
+                    if (error) throw error;
+                }
+                closeModal();
+                await initApp();
+                showToast('Approved — ready to publish');
+            } catch (e) {
+                showToast('Could not approve: ' + (e.message || e));
             }
-            contentData[id].status = 'scheduled';
-            closeModal();
-            renderFeed();
-            showToast('Post approved and scheduled');
         }
 
         async function rejectPost(id) {
             const post = contentData[id];
-            if (post.dbId) {
-                await supabase.from('posts').update({ status: 'rejected' }).eq('id', post.dbId);
+            try {
+                if (post.dbId) {
+                    const { error } = await supabase.from('posts').update({ status: 'rejected' }).eq('id', post.dbId);
+                    if (error) throw error;
+                }
+                closeModal();
+                await initApp();
+                showToast('Rejected — removed from the queue');
+            } catch (e) {
+                showToast('Could not reject: ' + (e.message || e));
             }
-            contentData[id].status = 'draft';
-            closeModal();
-            renderFeed();
-            showToast('Post rejected — sent back for revision');
         }
 
-        function regeneratePost(id) {
-            showToast('Regenerating content...');
-            setTimeout(() => {
+        // Regenerate → ask the model for a fresh take (optionally using the notes
+        // box), then send it back to 'pending' for re-review.
+        async function regeneratePost(id) {
+            const post = contentData[id];
+            if (!post.dbId) { showToast('Save this post first.'); return; }
+            const noteEl = document.querySelector('#modalContent .feedback-input');
+            const note = noteEl ? noteEl.value.trim() : '';
+            showToast('Regenerating in your voice…');
+            try {
+                await invokeFn('regenerate-tweet', { post_id: post.dbId, note: note || undefined });
                 closeModal();
-                showToast('New version generated');
-            }, 2000);
+                await initApp();
+                showToast('Fresh version ready for review ✓');
+            } catch (e) {
+                showToast('Regenerate failed: ' + e.message);
+            }
         }
+
+        // Manual override: publish an approved tweet right now (still gated —
+        // publish-now rejects anything that isn't approved).
+        async function postNow(id) {
+            const post = contentData[id];
+            if (!post.dbId) return;
+            showToast('Posting to X…');
+            try {
+                await invokeFn('publish-now', { post_id: post.dbId });
+                closeModal();
+                await initApp();
+                showToast('Posted to X ✓');
+            } catch (e) {
+                showToast('Post failed: ' + e.message);
+            }
+        }
+
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
