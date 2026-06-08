@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import WaitlistForm from "@/components/waitlist/WaitlistForm";
 import LiveCount from "@/components/LiveCount";
+import TryItPreview from "@/components/landing/TryItPreview";
 
 /* =========================================================================
    echo — waitlist landing page
@@ -36,6 +37,7 @@ export default function HomePage() {
     <main className="relative min-h-screen overflow-x-clip">
       <TopBar />
       <Hero />
+      <TryItPreview />
       <ValueProp />
       <HowItWorks />
       <ForWho />
