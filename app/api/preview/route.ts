@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chat } from "@/lib/llm";
+import { chat, providerLabel } from "@/lib/llm";
 import { previewFallback, detectRegister } from "@/lib/preview";
-import { getSupabase } from "@/lib/server/supabase";
+import { getSupabase, isSupabaseConfigured } from "@/lib/server/supabase";
 import { allowRequest, clientIp, ipBucket } from "@/lib/server/ratelimit";
 
 export const runtime = "nodejs";
@@ -128,4 +128,85 @@ Write one X post about that idea, in my voice.`,
     logTry(idea, register, false);
     return NextResponse.json({ draft: previewFallback(idea), live: false });
   }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/preview — config health check. Booleans only, never secret values.
+// Confirms end-to-end that (a) an LLM key is set AND actually works, and
+// (b) the Supabase tables/function for logging + rate limiting exist.
+// Result is cached briefly so the tiny probe call can't be used to burn the key.
+// ---------------------------------------------------------------------------
+let healthCache: { at: number; body: Record<string, unknown> } | null = null;
+
+export async function GET() {
+  const now = Date.now();
+  if (healthCache && now - healthCache.at < 60_000) {
+    return NextResponse.json({ ...healthCache.body, cached: true });
+  }
+
+  const llmConfigured = Boolean(
+    process.env.LLM_API_KEY ||
+      process.env.GROQ_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.OPENAI_API_KEY ||
+      process.env.OPENROUTER_API_KEY ||
+      process.env.TOGETHER_API_KEY ||
+      process.env.ANTHROPIC_API_KEY,
+  );
+  let llmLive = false;
+  let llmError: string | undefined;
+  if (llmConfigured) {
+    try {
+      const r = await chat({
+        system: "Reply with exactly the word: ok",
+        prompt: "ok",
+        maxTokens: 8,
+        temperature: 0,
+      });
+      llmLive = Boolean(r && r.trim());
+    } catch (e) {
+      llmError = (e instanceof Error ? e.message : "error").slice(0, 200);
+    }
+  }
+
+  const supabaseConfigured = isSupabaseConfigured();
+  let previewTable = false;
+  let rateLimitFn = false;
+  let sbError: string | undefined;
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      const { error } = await sb
+        .from("preview_tries")
+        .select("id", { head: true, count: "exact" });
+      previewTable = !error;
+      if (error) sbError = error.message.slice(0, 160);
+    } catch (e) {
+      sbError = (e instanceof Error ? e.message : "error").slice(0, 160);
+    }
+    try {
+      const { error } = await sb.rpc("rate_limit_check", {
+        p_bucket: "healthcheck",
+        p_max: 1_000_000,
+        p_window_seconds: 1,
+      });
+      rateLimitFn = !error;
+    } catch {
+      /* function missing — leave false */
+    }
+  }
+
+  const body = {
+    ok: true,
+    provider: providerLabel(),
+    llm: { configured: llmConfigured, live: llmLive, ...(llmError ? { error: llmError } : {}) },
+    supabase: {
+      configured: supabaseConfigured,
+      previewTable,
+      rateLimitFn,
+      ...(sbError ? { error: sbError } : {}),
+    },
+  };
+  healthCache = { at: now, body };
+  return NextResponse.json(body);
 }
