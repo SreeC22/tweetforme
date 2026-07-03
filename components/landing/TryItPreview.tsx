@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import WaitlistForm from "@/components/waitlist/WaitlistForm";
-import { DEMO_PROFILE, DEMO_DRAFTS } from "@/lib/demo";
+import { previewFallback } from "@/lib/preview";
 
 const EXAMPLES = [
   "the myth of the overnight success",
@@ -25,19 +25,17 @@ export default function TryItPreview() {
     setLoading(true);
     setDraft(null);
     try {
-      const r = await fetch("/api/generate", {
+      const r = await fetch("/api/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: q, profile: DEMO_PROFILE }),
+        body: JSON.stringify({ idea: q }),
       });
       const data = await r.json();
-      if (!r.ok || !data?.drafts?.length) throw new Error("fallback");
-      const pick =
-        data.drafts.find((d: { platform: string }) => d.platform === "x") ?? data.drafts[0];
-      setDraft(String(pick.text));
+      // The endpoint always returns an on-topic draft (real or fallback); only a
+      // network/parse failure lands here, so build one from the idea locally.
+      setDraft(String(data?.draft || previewFallback(q)));
     } catch {
-      // Never show an error on the landing page — fall back to a seeded draft.
-      setDraft(DEMO_DRAFTS[0].text);
+      setDraft(previewFallback(q));
     } finally {
       setLoading(false);
       setRevealed(true);
