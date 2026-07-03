@@ -14,7 +14,7 @@ const GENZ =
 const FORMAL =
   /\b(thoughts|folks|humbled|blessed|journey|excited to|pleased to|grateful|colleagues|kindly|regards|furthermore|leverage|synergy|takeaway|lesson)\b/i;
 
-function detectRegister(idea: string): Register {
+export function detectRegister(idea: string): Register {
   const s = idea.trim();
   if (GENZ.test(s)) return "genz";
   // Reads like proper prose: capitalized start, ends on punctuation, a few words.
