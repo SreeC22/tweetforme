@@ -1,30 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { chat } from "@/lib/llm";
-import { DEMO_PROFILE } from "@/lib/demo";
 import { previewFallback } from "@/lib/preview";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 /**
- * Landing-page preview: a visitor types an idea and gets ONE short draft in a
- * fixed sample creator's voice — no signup, no profile upload.
+ * Landing-page preview: a visitor types an idea and gets ONE short draft that
+ * ECHOES the voice they typed in — gen-z in, gen-z out; formal in, formal out.
+ * No signup, no profile upload. It's a zero-training taste of the core product.
  *
  * Deliberately different from /api/generate:
  *   - one draft (fast + cheap), not six
- *   - the visitor never sends a voice profile — we use the seeded DEMO_PROFILE
+ *   - no voice profile — the "voice" is inferred from the visitor's own wording
  *   - it NEVER hard-fails: if the LLM key is missing / rate-limited / slow, it
- *     returns an on-topic fallback built from the visitor's own idea, so the
- *     widget always shows something coherent (HTTP 200 with { live: false }).
+ *     returns an on-topic fallback built from the visitor's own idea (and their
+ *     register), so the widget always shows something coherent (HTTP 200,
+ *     { live: false }).
  */
 
-const SYS = `You write a SINGLE short X (Twitter) post that sounds exactly like this creator.
-Rules:
-- 240 characters or fewer.
-- lowercase, punchy, declarative. no hashtags, no emoji.
-- no generic AI openers ("in today's world", "excited to share", "let's dive in").
-- one bold claim, concrete, ends on a punch.
-Return ONLY the post text — no surrounding quotes, no preamble, no explanation.`;
+const SYS = `You rewrite a raw idea into ONE short X (Twitter) post.
+
+THE MOST IMPORTANT RULE: mirror the VOICE of how the user wrote their idea.
+Match their register, slang, capitalization, punctuation, emoji habits, and energy.
+- gen-z slang in  -> gen-z slang out ("fr", "ngl", "lowkey", "it's giving", "mid")
+- all-lowercase, loose punctuation in -> keep it lowercase and loose
+- polished, capitalized, "Thoughts?" in -> keep it professional and clean
+Write the post as if THEY wrote it on their best day.
+
+Other rules:
+- 240 characters or fewer. exactly ONE post. no options, no preamble.
+- no hashtags unless they used hashtags. no emoji unless they used emoji.
+- never use generic AI openers ("in today's world", "excited to share", "let's dive in").
+- keep it specific to their idea and end on a strong line.
+Return ONLY the post text — no surrounding quotes, no explanation.`;
 
 export async function POST(req: NextRequest) {
   let idea = "";
@@ -40,17 +49,15 @@ export async function POST(req: NextRequest) {
   }
   if (idea.length > 400) idea = idea.slice(0, 400);
 
-  const p = DEMO_PROFILE;
   try {
     const raw = await chat({
       system: SYS,
-      prompt: `VOICE SUMMARY: ${p.summary}
-SIGNATURE MOVES: ${p.signature_moves.join("; ")}
-
-IDEA TO POST ABOUT:
+      prompt: `Match the voice of exactly how I wrote this — same slang, casing, punctuation, energy:
+"""
 ${idea}
+"""
 
-Write one post about that idea, unmistakably in their voice.`,
+Write one X post about that idea, in my voice.`,
       maxTokens: 220,
       temperature: 0.9,
     });
