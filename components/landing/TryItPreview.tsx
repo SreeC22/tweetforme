@@ -4,10 +4,11 @@ import { useState } from "react";
 import WaitlistForm from "@/components/waitlist/WaitlistForm";
 import { previewFallback } from "@/lib/preview";
 
+// Deliberately different registers so visitors see the preview mirror THEIR voice.
 const EXAMPLES = [
-  "the myth of the overnight success",
-  "why I stopped taking meetings",
   "shipping beats planning",
+  "planning is so mid fr 💀",
+  "Execution beats planning. Thoughts?",
 ];
 
 // A free, no-signup taste: type an idea → one draft in a sample creator's
@@ -53,8 +54,8 @@ export default function TryItPreview() {
             Type an idea. Watch it write.
           </h2>
           <p className="mx-auto mt-4 max-w-[34rem] text-[1.02rem] leading-[1.65] text-[color:var(--ink-soft)]">
-            A live taste in a sample creator&apos;s voice — no signup needed. The
-            real thing writes in <em>your</em> voice.
+            Write it however you&apos;d actually say it — echo mirrors your voice
+            right back. Gen&nbsp;Z in, Gen&nbsp;Z out. No signup, no training.
           </p>
         </div>
 
@@ -102,7 +103,7 @@ export default function TryItPreview() {
               <span className="font-medium text-[color:var(--accent)]">
                 a draft for X
               </span>
-              <span className="text-[color:var(--ink-mute)]">sample voice</span>
+              <span className="text-[color:var(--ink-mute)]">in your voice</span>
             </div>
             <p className="mt-3 font-display text-[1.3rem] leading-[1.5] text-[color:var(--ink)] sm:text-[1.4rem]">
               {draft}
